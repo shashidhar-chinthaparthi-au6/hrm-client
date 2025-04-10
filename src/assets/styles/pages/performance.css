@@ -1,0 +1,417 @@
+/* Performance Pages Styles */
+
+/* Common */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Performance Review */
+.performance-review-container {
+  padding: 1rem 0;
+}
+
+.employee-review-header {
+  display: flex;
+  justify-content: space-between;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.employee-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.employee-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.employee-details h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+}
+
+.employee-details p {
+  margin: 0 0 0.5rem 0;
+  color: #6b7280;
+}
+
+.review-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.draft {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.overall-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score-circle {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.score-circle.excellent {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.score-circle.good {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.score-circle.average {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.score-circle.below-average {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.score-circle.poor {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.review-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+  color: #2563eb;
+  border-bottom: 2px solid #2563eb;
+}
+
+.tab-btn:hover {
+  color: #4b5563;
+}
+
+.review-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  height: 100%;
+}
+
+.summary-card ul {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.goals-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.goal-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Goal Tracking */
+.goal-tracking-container {
+  padding: 1rem 0;
+}
+
+.goal-stats-card {
+  margin-bottom: 1.5rem;
+}
+
+.goal-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  flex: 1;
+  min-width: 120px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.goal-filters-card {
+  margin-bottom: 1.5rem;
+}
+
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #2563eb;
+  border-radius: 9999px;
+}
+
+.no-data-card {
+  padding: 2rem;
+}
+
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.no-data-message i {
+  font-size: 3rem;
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.25rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.action-btn.view {
+  color: #2563eb;
+}
+
+.action-btn.edit {
+  color: #059669;
+}
+
+.action-btn.delete {
+  color: #dc2626;
+}
+
+.action-btn:hover {
+  background-color: #f3f4f6;
+}
+
+/* Feedback Form */
+.feedback-container {
+  margin-top: 1.5rem;
+}
+
+.feedback-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.feedback-item {
+  padding: 1rem;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-author {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.feedback-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.feedback-type {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  margin-top: 0.25rem;
+}
+
+.add-feedback {
+  margin-top: 2rem;
+}
+
+/* Metrics */
+.metrics-container {
+  margin-top: 1.5rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card {
+  padding: 1rem;
+}
+
+.metric-score {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.score-bar {
+  flex: 1;
+  height: 0.75rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.score-bar .fill {
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.score-bar.excellent .fill {
+  background-color: #10b981;
+}
+
+.score-bar.good .fill {
+  background-color: #3b82f6;
+}
+
+.score-bar.average .fill {
+  background-color: #f59e0b;
+}
+
+.score-bar.below-average .fill {
+  background-color: #ef4444;
+}
+
+.score-bar.poor .fill {
+  background-color: #6b7280;
+}
+
+.comparison-chart {
+  margin-top: 2rem;
+  padding: 1.5rem;
+} 

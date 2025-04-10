@@ -3,21 +3,53 @@ import { Link } from 'react-router-dom';
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Box, Typography, Paper, Grid, Card, CardContent, Button as MuiButton, Tabs, Tab, TextField } from '@mui/material';
-import { DatePicker as MuiDatePicker } from '@mui/x-date-pickers/DatePicker';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-
-// Components
-// import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Select from '../../components/common/Select';
-import DatePicker from '../../components/common/DatePicker';
-import Table from '../../components/common/Table';
-import Badge from '../../components/common/Badge'; 
+import {
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Tabs,
+  Tab,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Chip,
+  CircularProgress,
+  Fade,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  InputAdornment,
+  Tooltip,
+  Divider,
+  Avatar
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import {
+  AccessTime as AccessTimeIcon,
+  EventNote as EventNoteIcon,
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+  Edit as EditIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  FilterList as FilterIcon,
+  CalendarToday as CalendarIcon,
+  People as PeopleIcon,
+  Assessment as AssessmentIcon
+} from '@mui/icons-material';
+import MainLayout from '../../components/layout/MainLayout';
 import Breadcrumbs from '../../components/layout/Breadcrumbs';
-import CheckInOut from '../../components/attendance/CheckInOut';
-import AttendanceSummary from '../../components/dashboard/AttendanceSummary';
 
 const AttendanceManagement = () => {
   const [loading, setLoading] = useState(true);
@@ -108,85 +140,22 @@ const AttendanceManagement = () => {
     setDateRange(prev => ({ ...prev, [field]: date }));
   };
   
-  const getStatusBadge = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case 'present':
-        return <Badge color="green" text="Present" />;
+        return 'success';
       case 'absent':
-        return <Badge color="red" text="Absent" />;
+        return 'error';
       case 'late':
-        return <Badge color="yellow" text="Late" />;
+        return 'warning';
       case 'half-day':
-        return <Badge color="orange" text="Half Day" />;
+        return 'info';
       case 'on-leave':
-        return <Badge color="blue" text="On Leave" />;
+        return 'primary';
       default:
-        return <Badge color="gray" text={status} />;
+        return 'default';
     }
   };
-  
-  const columns = [
-    {
-      header: 'Employee',
-      accessor: 'employee',
-      cell: ({ value }) => (
-        <div className="flex items-center gap-3">
-          <img
-            src={value.avatar || '/assets/images/avatar-placeholder.png'}
-            alt={value.name}
-            className="h-8 w-8 rounded-full"
-          />
-          <div>
-            <p className="font-medium">{value.name}</p>
-            <p className="text-xs text-gray-500">{value.employeeId}</p>
-          </div>
-        </div>
-      )
-    },
-    {
-      header: 'Department',
-      accessor: 'department'
-    },
-    {
-      header: 'Date',
-      accessor: 'date',
-      cell: ({ value }) => format(new Date(value), 'MMM dd, yyyy')
-    },
-    {
-      header: 'Clock In',
-      accessor: 'clockIn',
-      cell: ({ value }) => (value ? format(new Date(value), 'hh:mm a') : '-')
-    },
-    {
-      header: 'Clock Out',
-      accessor: 'clockOut',
-      cell: ({ value }) => (value ? format(new Date(value), 'hh:mm a') : '-')
-    },
-    {
-      header: 'Hours',
-      accessor: 'hoursWorked',
-      cell: ({ value }) => (value ? `${value}h` : '-')
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      cell: ({ value }) => getStatusBadge(value)
-    },
-    {
-      header: 'Actions',
-      accessor: 'id',
-      cell: ({ value }) => (
-        <div className="flex items-center space-x-2">
-          <Button variant="icon" size="sm" onClick={() => handleView(value)}>
-            <i className="fas fa-eye" />
-          </Button>
-          <Button variant="icon" size="sm" onClick={() => handleEdit(value)}>
-            <i className="fas fa-edit" />
-          </Button>
-        </div>
-      )
-    }
-  ];
   
   const handleView = (id) => {
     // Implement view logic
@@ -203,96 +172,320 @@ const AttendanceManagement = () => {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Attendance Management</Typography>
-        <Button variant="contained" color="primary" startIcon={<EventNoteIcon />}>
-          Generate Report
-        </Button>
-      </Box>
+    <MainLayout>
+      <Box sx={{ p: 3 }}>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', link: '/dashboard' },
+            { label: 'Attendance', link: '/attendance' },
+            { label: 'Attendance Management', link: '/attendance/management' },
+          ]}
+        />
 
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <AccessTimeIcon sx={{ fontSize: 80, color: 'primary.main', mr: 2 }} />
-              <Box>
-                <Typography variant="h6">Today's Status</Typography>
-                <Typography variant="h3" color="primary.main">
-                  {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-            <Button variant="contained" color="success" size="large" sx={{ mr: 2 }}>
-              Check In
-            </Button>
-            <Button variant="contained" color="error" size="large">
-              Check Out
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      <Box sx={{ mb: 3 }}>
-        <Tabs value={value} onChange={handleChange} centered>
-          <Tab label="Daily" />
-          <Tab label="Weekly" />
-          <Tab label="Monthly" />
-        </Tabs>
-      </Box>
-
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Attendance Log</Typography>
-          <DatePicker 
-            label="Select Date" 
-            value={date}
-            onChange={(newValue) => setDate(newValue)}
-            slotProps={{
-              textField: { 
-                size: 'small',
-                sx: { width: 200 } 
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            Attendance Management
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AssessmentIcon />}
+            sx={{
+              background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
               }
             }}
-          />
+          >
+            Generate Report
+          </Button>
         </Box>
 
-        <Grid container spacing={2}>
-          {[1, 2, 3, 4, 5].map((day) => (
-            <Grid item xs={12} key={day}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Grid container>
-                    <Grid item xs={3}>
-                      <Typography variant="subtitle1">
-                        {new Date(2023, 0, day).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+        <Fade in timeout={500}>
+          <Card 
+            elevation={3}
+            sx={{ 
+              borderRadius: 2, 
+              mb: 4,
+              background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+              color: 'white',
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: 'linear-gradient(90deg, #1976d2, #2196f3)',
+              }
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <AccessTimeIcon sx={{ fontSize: 80, color: 'white', mr: 2 }} />
+                    <Box>
+                      <Typography variant="h6" sx={{ color: 'white' }}>Today's Status</Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: 'white' }}>
+                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="body2" color="text.secondary">Check In</Typography>
-                      <Typography variant="body1">09:0{day} AM</Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="body2" color="text.secondary">Check Out</Typography>
-                      <Typography variant="body1">06:1{day} PM</Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="body2" color="text.secondary">Total Hours</Typography>
-                      <Typography variant="body1">9h 1{day}m</Typography>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Paper>
-    </Box>
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="contained" 
+                    color="success" 
+                    size="large" 
+                    sx={{ mr: 2, bgcolor: 'white', color: 'success.main', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' } }}
+                    startIcon={<CheckCircleIcon />}
+                  >
+                    Check In
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    color="error" 
+                    size="large"
+                    sx={{ bgcolor: 'white', color: 'error.main', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' } }}
+                    startIcon={<CancelIcon />}
+                  >
+                    Check Out
+                  </Button>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Fade>
+
+        <Box sx={{ mb: 3 }}>
+          <Tabs 
+            value={value} 
+            onChange={handleChange} 
+            centered
+            sx={{
+              '& .MuiTab-root': {
+                fontWeight: 500,
+                textTransform: 'none',
+                fontSize: '1rem',
+              },
+              '& .Mui-selected': {
+                fontWeight: 600,
+              }
+            }}
+          >
+            <Tab label="Daily" />
+            <Tab label="Weekly" />
+            <Tab label="Monthly" />
+          </Tabs>
+        </Box>
+
+        <Fade in timeout={500}>
+          <Card elevation={3} sx={{ borderRadius: 2, mb: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => handleDateRangeChange('today')}
+                  startIcon={<CalendarIcon />}
+                >
+                  Today
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => handleDateRangeChange('yesterday')}
+                  startIcon={<CalendarIcon />}
+                >
+                  Yesterday
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => handleDateRangeChange('week')}
+                  startIcon={<CalendarIcon />}
+                >
+                  This Week
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => handleDateRangeChange('month')}
+                  startIcon={<CalendarIcon />}
+                >
+                  This Month
+                </Button>
+                
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Start Date"
+                    value={dateRange.startDate}
+                    onChange={(date) => handleCustomDateChange('startDate', date)}
+                    renderInput={(params) => <TextField {...params} size="small" />}
+                  />
+                  <DatePicker
+                    label="End Date"
+                    value={dateRange.endDate}
+                    onChange={(date) => handleCustomDateChange('endDate', date)}
+                    renderInput={(params) => <TextField {...params} size="small" />}
+                  />
+                </LocalizationProvider>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+                <TextField
+                  placeholder="Search employees..."
+                  value={filters.searchTerm}
+                  onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                  size="small"
+                  sx={{ flexGrow: 1 }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    value={filters.department}
+                    label="Department"
+                    onChange={(e) => handleFilterChange('department', e.target.value)}
+                  >
+                    {departments.map((dept) => (
+                      <MenuItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={filters.status}
+                    label="Status"
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                  >
+                    <MenuItem value="">All Statuses</MenuItem>
+                    <MenuItem value="present">Present</MenuItem>
+                    <MenuItem value="absent">Absent</MenuItem>
+                    <MenuItem value="late">Late</MenuItem>
+                    <MenuItem value="half-day">Half Day</MenuItem>
+                    <MenuItem value="on-leave">On Leave</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <TableContainer component={Paper} elevation={0}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Employee</TableCell>
+                      <TableCell>Department</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Clock In</TableCell>
+                      <TableCell>Clock Out</TableCell>
+                      <TableCell>Hours</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center">
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
+                    ) : attendanceData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center">
+                          No attendance records found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      attendanceData.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar 
+                                src={record.employee?.avatar || '/assets/images/avatar-placeholder.png'} 
+                                alt={record.employee?.name}
+                                sx={{ width: 32, height: 32, mr: 2 }}
+                              />
+                              <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {record.employee?.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {record.employee?.employeeId}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell>{record.department}</TableCell>
+                          <TableCell>
+                            {format(new Date(record.date), 'MMM dd, yyyy')}
+                          </TableCell>
+                          <TableCell>
+                            {record.clockIn ? format(new Date(record.clockIn), 'hh:mm a') : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {record.clockOut ? format(new Date(record.clockOut), 'hh:mm a') : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {record.hoursWorked ? `${record.hoursWorked}h` : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                              color={getStatusColor(record.status)}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                              <Tooltip title="View Details">
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleView(record.id)}
+                                  sx={{ color: 'primary.main' }}
+                                >
+                                  <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Edit">
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleEdit(record.id)}
+                                  sx={{ color: 'primary.main' }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Fade>
+      </Box>
+    </MainLayout>
   );
 };
 

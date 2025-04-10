@@ -3,13 +3,47 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { createEmployee } from '../../services/employeeService';
 import employeeService from '../../services/employeeService';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { DatePicker } from '../../components/ui/date-picker';
-import { Loader2 } from 'lucide-react';
+import { 
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  MenuItem,
+  Divider,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Container,
+  Stack
+} from '@mui/material';
+import { 
+  Person as PersonIcon,
+  LocationOn as LocationIcon,
+  Work as WorkIcon,
+  AccountBalance as BankIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Badge as BadgeIcon,
+  Cake as CakeIcon,
+  Wc as GenderIcon,
+  Business as BusinessIcon,
+  Title as TitleIcon,
+  Place as PlaceIcon,
+  SupervisorAccount as ManagerIcon,
+  Event as EventIcon,
+  WorkOutline as WorkTypeIcon,
+  AttachMoney as MoneyIcon,
+  AccountBox as AccountIcon,
+  AccountBalance as AccountBalanceIcon,
+  Code as CodeIcon
+} from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { CircularProgress } from '@mui/material';
 
 const AddEmployee = () => {
   const navigate = useNavigate();
@@ -33,6 +67,8 @@ const AddEmployee = () => {
     department: '',
     designation: '',
     jobTitle: '',
+    position: '',
+    workLocation: '',
     managerId: '',
     dateOfJoining: null,
     employmentType: 'full-time',
@@ -107,299 +143,510 @@ const AddEmployee = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add New Employee</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="employeeId">Employee ID</Label>
-                <Input
-                  id="employeeId"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <DatePicker
-                  selected={formData.dateOfBirth}
-                  onChange={(date) => handleDateChange('dateOfBirth', date)}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="gender">Gender</Label>
-                <Select
-                  value={formData.gender}
-                  onValueChange={(value) => handleChange({ target: { name: 'gender', value } })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper elevation={0} sx={{ p: 3, mb: 4, background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)', color: 'white' }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Add New Employee
+          </Typography>
+          <Typography variant="subtitle1">
+            Fill in the employee details below to create a new employee record.
+          </Typography>
+        </Paper>
 
-            {/* Address Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                <Input
-                  id="state"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input
-                  id="postalCode"
-                  name="postalCode"
-                  value={formData.postalCode}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <Input
-                  id="country"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+        <Card elevation={3}>
+          <CardContent sx={{ p: 4 }}>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={4}>
+                {/* Personal Information */}
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="h6">Personal Information</Typography>
+                  </Box>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="First Name"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <PersonIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Last Name"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <PersonIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <EmailIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <PhoneIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Employee ID"
+                        name="employeeId"
+                        value={formData.employeeId}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <BadgeIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DatePicker
+                        label="Date of Birth"
+                        value={formData.dateOfBirth}
+                        onChange={(date) => handleDateChange('dateOfBirth', date)}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            required
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <CakeIcon color="primary" />
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Gender"
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <GenderIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      >
+                        <MenuItem value="male">Male</MenuItem>
+                        <MenuItem value="female">Female</MenuItem>
+                        <MenuItem value="other">Other</MenuItem>
+                      </TextField>
+                    </Grid>
+                  </Grid>
+                </Box>
 
-            {/* Employment Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="department">Department</Label>
-                <Select
-                  value={formData.department}
-                  onValueChange={(value) => handleChange({ target: { name: 'department', value } })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept._id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="designation">Designation</Label>
-                <Select
-                  value={formData.designation}
-                  onValueChange={(value) => handleChange({ target: { name: 'designation', value } })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select designation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {designations.map((desig) => (
-                      <SelectItem key={desig._id} value={desig._id}>
-                        {desig.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="jobTitle">Job Title</Label>
-                <Input
-                  id="jobTitle"
-                  name="jobTitle"
-                  value={formData.jobTitle}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="managerId">Manager</Label>
-                <Select
-                  value={formData.managerId}
-                  onValueChange={(value) => handleChange({ target: { name: 'managerId', value } })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select manager" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {managers.map((manager) => (
-                      <SelectItem key={manager._id} value={manager._id}>
-                        {`${manager.firstName} ${manager.lastName}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="dateOfJoining">Date of Joining</Label>
-                <DatePicker
-                  selected={formData.dateOfJoining}
-                  onChange={(date) => handleDateChange('dateOfJoining', date)}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="employmentType">Employment Type</Label>
-                <Select
-                  value={formData.employmentType}
-                  onValueChange={(value) => handleChange({ target: { name: 'employmentType', value } })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employment type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full-time">Full Time</SelectItem>
-                    <SelectItem value="part-time">Part Time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="intern">Intern</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="salary">Salary</Label>
-                <Input
-                  id="salary"
-                  name="salary"
-                  type="number"
-                  value={formData.salary}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+                <Divider />
 
-            {/* Bank Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="bankDetails.accountName">Account Name</Label>
-                <Input
-                  id="bankDetails.accountName"
-                  name="bankDetails.accountName"
-                  value={formData.bankDetails.accountName}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="bankDetails.accountNumber">Account Number</Label>
-                <Input
-                  id="bankDetails.accountNumber"
-                  name="bankDetails.accountNumber"
-                  value={formData.bankDetails.accountNumber}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="bankDetails.bankName">Bank Name</Label>
-                <Input
-                  id="bankDetails.bankName"
-                  name="bankDetails.bankName"
-                  value={formData.bankDetails.bankName}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="bankDetails.ifscCode">IFSC Code</Label>
-                <Input
-                  id="bankDetails.ifscCode"
-                  name="bankDetails.ifscCode"
-                  value={formData.bankDetails.ifscCode}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+                {/* Address Information */}
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <LocationIcon sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="h6">Address Information</Typography>
+                  </Box>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Address"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        multiline
+                        rows={2}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="City"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="State"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Postal Code"
+                        name="postalCode"
+                        value={formData.postalCode}
+                        onChange={handleChange}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Country"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
 
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/employees')}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Employee
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+                <Divider />
+
+                {/* Employment Information */}
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <WorkIcon sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="h6">Employment Information</Typography>
+                  </Box>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Department"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <BusinessIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      >
+                        {departments.map((dept) => (
+                          <MenuItem key={dept._id} value={dept._id}>
+                            {dept.name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Designation"
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <TitleIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      >
+                        {designations.map((desig) => (
+                          <MenuItem key={desig._id} value={desig._id}>
+                            {desig.name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Job Title"
+                        name="jobTitle"
+                        value={formData.jobTitle}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <WorkIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Position"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
+                        required
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <WorkIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Work Location"
+                        name="workLocation"
+                        value={formData.workLocation}
+                        onChange={handleChange}
+                        required
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <PlaceIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Manager"
+                        name="managerId"
+                        value={formData.managerId}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <ManagerIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      >
+                        {managers.map((manager) => (
+                          <MenuItem key={manager._id} value={manager._id}>
+                            {`${manager.firstName} ${manager.lastName}`}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DatePicker
+                        label="Date of Joining"
+                        value={formData.dateOfJoining}
+                        onChange={(date) => handleDateChange('dateOfJoining', date)}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            required
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <EventIcon color="primary" />
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Employment Type"
+                        name="employmentType"
+                        value={formData.employmentType}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <WorkTypeIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      >
+                        <MenuItem value="full-time">Full Time</MenuItem>
+                        <MenuItem value="part-time">Part Time</MenuItem>
+                        <MenuItem value="contract">Contract</MenuItem>
+                        <MenuItem value="intern">Intern</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Salary"
+                        name="salary"
+                        type="number"
+                        value={formData.salary}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <MoneyIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                <Divider />
+
+                {/* Bank Details */}
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <BankIcon sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="h6">Bank Details</Typography>
+                  </Box>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Account Name"
+                        name="bankDetails.accountName"
+                        value={formData.bankDetails.accountName}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <AccountIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Account Number"
+                        name="bankDetails.accountNumber"
+                        value={formData.bankDetails.accountNumber}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <AccountBalanceIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Bank Name"
+                        name="bankDetails.bankName"
+                        value={formData.bankDetails.bankName}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <BankIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="IFSC Code"
+                        name="bankDetails.ifscCode"
+                        value={formData.bankDetails.ifscCode}
+                        onChange={handleChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CodeIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/employees')}
+                    size="large"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={loading}
+                    size="large"
+                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+                  >
+                    Create Employee
+                  </Button>
+                </Box>
+              </Stack>
+            </form>
+          </CardContent>
+        </Card>
+      </Container>
+    </LocalizationProvider>
   );
 };
 

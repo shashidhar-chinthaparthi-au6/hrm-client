@@ -1,16 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import Card from '../../components/common/Card';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Button from '../../components/common/Button';
-import Modal from '../../components/common/Modal';
+import {
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  InputAdornment,
+  IconButton,
+  Tabs,
+  Tab,
+  Switch,
+  FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Fade,
+  Tooltip,
+  Chip,
+  Stack,
+  Divider,
+  Alert,
+  Zoom
+} from '@mui/material';
+import {
+  Settings as SettingsIcon,
+  Email as EmailIcon,
+  Notifications as NotificationsIcon,
+  Security as SecurityIcon,
+  Backup as BackupIcon,
+  Save as SaveIcon,
+  Send as SendIcon,
+  Language as LanguageIcon,
+  AccessTime as TimeIcon,
+  CalendarToday as CalendarIcon,
+  AttachMoney as CurrencyIcon,
+  Lock as LockIcon,
+  CloudUpload as CloudUploadIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon
+} from '@mui/icons-material';
+import MainLayout from '../components/layout/MainLayout';
+import Breadcrumbs from '../components/layout/Breadcrumbs';
 
 const SystemSettings = () => {
   const [loading, setLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState('general');
+  const [testEmailAddress, setTestEmailAddress] = useState('');
   const [settings, setSettings] = useState({
     general: {
       companyName: '',
@@ -124,320 +172,558 @@ const SystemSettings = () => {
   };
 
   const sendTestEmail = async () => {
+    if (!testEmailAddress) {
+      toast.error('Please enter a test email address');
+      return;
+    }
+    
     try {
       // Mock API call - replace with actual API
-      // await api.post('/settings/test-email', settings.email);
+      // await api.post('/settings/test-email', { ...settings.email, testEmail: testEmailAddress });
       toast.success('Test email sent successfully');
       setIsModalOpen(false);
+      setTestEmailAddress('');
     } catch (error) {
       toast.error('Failed to send test email');
     }
   };
 
   const renderGeneralSettings = () => (
-    <div className="space-y-4">
-      <Input
-        label="Company Name"
-        value={settings.general.companyName}
-        onChange={(e) => handleInputChange('general', 'companyName', e.target.value)}
-        placeholder="Enter company name"
-      />
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <InfoIcon sx={{ mr: 1 }} />
+          General settings affect how your system displays information and handles basic operations.
+        </Alert>
+      </Grid>
       
-      <Select
-        label="Date Format"
-        value={settings.general.dateFormat}
-        onChange={(e) => handleInputChange('general', 'dateFormat', e.target.value)}
-        options={[
-          { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
-          { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
-          { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' }
-        ]}
-      />
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Company Name"
+          value={settings.general.companyName}
+          onChange={(e) => handleInputChange('general', 'companyName', e.target.value)}
+          placeholder="Enter company name"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SettingsIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Grid>
       
-      <Select
-        label="Time Format"
-        value={settings.general.timeFormat}
-        onChange={(e) => handleInputChange('general', 'timeFormat', e.target.value)}
-        options={[
-          { value: '12', label: '12-hour (AM/PM)' },
-          { value: '24', label: '24-hour' }
-        ]}
-      />
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Date Format</InputLabel>
+          <Select
+            value={settings.general.dateFormat}
+            onChange={(e) => handleInputChange('general', 'dateFormat', e.target.value)}
+            label="Date Format"
+          >
+            <MenuItem value="DD/MM/YYYY">DD/MM/YYYY</MenuItem>
+            <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
+            <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Select
-        label="Timezone"
-        value={settings.general.timezone}
-        onChange={(e) => handleInputChange('general', 'timezone', e.target.value)}
-        options={[
-          { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
-          { value: 'EST', label: 'EST (Eastern Standard Time)' },
-          { value: 'PST', label: 'PST (Pacific Standard Time)' },
-          { value: 'IST', label: 'IST (Indian Standard Time)' }
-        ]}
-      />
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Time Format</InputLabel>
+          <Select
+            value={settings.general.timeFormat}
+            onChange={(e) => handleInputChange('general', 'timeFormat', e.target.value)}
+            label="Time Format"
+          >
+            <MenuItem value="12">12-hour (AM/PM)</MenuItem>
+            <MenuItem value="24">24-hour</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Select
-        label="Default Language"
-        value={settings.general.defaultLanguage}
-        onChange={(e) => handleInputChange('general', 'defaultLanguage', e.target.value)}
-        options={[
-          { value: 'en', label: 'English' },
-          { value: 'es', label: 'Spanish' },
-          { value: 'fr', label: 'French' },
-          { value: 'de', label: 'German' }
-        ]}
-      />
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Timezone</InputLabel>
+          <Select
+            value={settings.general.timezone}
+            onChange={(e) => handleInputChange('general', 'timezone', e.target.value)}
+            label="Timezone"
+          >
+            <MenuItem value="UTC">UTC (Coordinated Universal Time)</MenuItem>
+            <MenuItem value="EST">EST (Eastern Standard Time)</MenuItem>
+            <MenuItem value="PST">PST (Pacific Standard Time)</MenuItem>
+            <MenuItem value="IST">IST (Indian Standard Time)</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Input
-        label="Fiscal Year Start (MM-DD)"
-        value={settings.general.fiscalYearStart}
-        onChange={(e) => handleInputChange('general', 'fiscalYearStart', e.target.value)}
-        placeholder="MM-DD"
-      />
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Default Language</InputLabel>
+          <Select
+            value={settings.general.defaultLanguage}
+            onChange={(e) => handleInputChange('general', 'defaultLanguage', e.target.value)}
+            label="Default Language"
+          >
+            <MenuItem value="en">English</MenuItem>
+            <MenuItem value="es">Spanish</MenuItem>
+            <MenuItem value="fr">French</MenuItem>
+            <MenuItem value="de">German</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Select
-        label="Currency"
-        value={settings.general.currency}
-        onChange={(e) => handleInputChange('general', 'currency', e.target.value)}
-        options={[
-          { value: 'USD', label: 'USD ($)' },
-          { value: 'EUR', label: 'EUR (€)' },
-          { value: 'GBP', label: 'GBP (£)' },
-          { value: 'INR', label: 'INR (₹)' }
-        ]}
-      />
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Fiscal Year Start (MM-DD)"
+          value={settings.general.fiscalYearStart}
+          onChange={(e) => handleInputChange('general', 'fiscalYearStart', e.target.value)}
+          placeholder="MM-DD"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <CalendarIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Grid>
       
-      <Select
-        label="Week Starts On"
-        value={settings.general.weekStartDay}
-        onChange={(e) => handleInputChange('general', 'weekStartDay', e.target.value)}
-        options={[
-          { value: 'Sunday', label: 'Sunday' },
-          { value: 'Monday', label: 'Monday' }
-        ]}
-      />
-    </div>
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Currency</InputLabel>
+          <Select
+            value={settings.general.currency}
+            onChange={(e) => handleInputChange('general', 'currency', e.target.value)}
+            label="Currency"
+          >
+            <MenuItem value="USD">USD - US Dollar</MenuItem>
+            <MenuItem value="EUR">EUR - Euro</MenuItem>
+            <MenuItem value="GBP">GBP - British Pound</MenuItem>
+            <MenuItem value="INR">INR - Indian Rupee</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Week Start Day</InputLabel>
+          <Select
+            value={settings.general.weekStartDay}
+            onChange={(e) => handleInputChange('general', 'weekStartDay', e.target.value)}
+            label="Week Start Day"
+          >
+            <MenuItem value="Monday">Monday</MenuItem>
+            <MenuItem value="Sunday">Sunday</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+    </Grid>
   );
 
   const renderEmailSettings = () => (
-    <div className="space-y-4">
-      <Input
-        label="SMTP Server"
-        value={settings.email.smtpServer}
-        onChange={(e) => handleInputChange('email', 'smtpServer', e.target.value)}
-        placeholder="e.g., smtp.gmail.com"
-      />
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <InfoIcon sx={{ mr: 1 }} />
+          Configure your email server settings for system notifications and communications.
+        </Alert>
+      </Grid>
       
-      <Input
-        label="SMTP Port"
-        value={settings.email.smtpPort}
-        onChange={(e) => handleInputChange('email', 'smtpPort', e.target.value)}
-        placeholder="e.g., 587"
-      />
-      
-      <Input
-        label="SMTP Username"
-        value={settings.email.smtpUser}
-        onChange={(e) => handleInputChange('email', 'smtpUser', e.target.value)}
-        placeholder="Enter username"
-      />
-      
-      <Input
-        label="SMTP Password"
-        type="password"
-        value={settings.email.smtpPassword}
-        onChange={(e) => handleInputChange('email', 'smtpPassword', e.target.value)}
-        placeholder="Enter password"
-      />
-      
-      <Input
-        label="Sender Email"
-        value={settings.email.senderEmail}
-        onChange={(e) => handleInputChange('email', 'senderEmail', e.target.value)}
-        placeholder="e.g., hr@yourcompany.com"
-      />
-      
-      <Input
-        label="Sender Name"
-        value={settings.email.senderName}
-        onChange={(e) => handleInputChange('email', 'senderName', e.target.value)}
-        placeholder="e.g., HR Department"
-      />
-      
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="enableSSL"
-          checked={settings.email.enableSSL}
-          onChange={() => handleCheckboxChange('email', 'enableSSL')}
-          className="mr-2"
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="SMTP Server"
+          value={settings.email.smtpServer}
+          onChange={(e) => handleInputChange('email', 'smtpServer', e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <EmailIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
         />
-        <label htmlFor="enableSSL">Enable SSL/TLS</label>
-      </div>
+      </Grid>
       
-      <Button 
-        label="Test Connection" 
-        onClick={handleTestEmailConnection} 
-        variant="secondary"
-      />
-    </div>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="SMTP Port"
+          value={settings.email.smtpPort}
+          onChange={(e) => handleInputChange('email', 'smtpPort', e.target.value)}
+          type="number"
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="SMTP Username"
+          value={settings.email.smtpUser}
+          onChange={(e) => handleInputChange('email', 'smtpUser', e.target.value)}
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="SMTP Password"
+          value={settings.email.smtpPassword}
+          onChange={(e) => handleInputChange('email', 'smtpPassword', e.target.value)}
+          type="password"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  edge="end"
+                >
+                  <LockIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Sender Email"
+          value={settings.email.senderEmail}
+          onChange={(e) => handleInputChange('email', 'senderEmail', e.target.value)}
+          type="email"
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Sender Name"
+          value={settings.email.senderName}
+          onChange={(e) => handleInputChange('email', 'senderName', e.target.value)}
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.email.enableSSL}
+              onChange={() => handleCheckboxChange('email', 'enableSSL')}
+              color="primary"
+            />
+          }
+          label="Enable SSL/TLS"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Button
+          variant="outlined"
+          startIcon={<SendIcon />}
+          onClick={handleTestEmailConnection}
+          sx={{ mt: 1 }}
+        >
+          Test Email Connection
+        </Button>
+      </Grid>
+    </Grid>
   );
 
   const renderNotificationSettings = () => (
-    <div className="space-y-4">
-      {Object.keys(settings.notifications).map(key => (
-        <div key={key} className="flex items-center">
-          <input
-            type="checkbox"
-            id={key}
-            checked={settings.notifications[key]}
-            onChange={() => handleCheckboxChange('notifications', key)}
-            className="mr-2"
-          />
-          <label htmlFor={key}>
-            {key.replace(/([A-Z])/g, ' $1')
-              .replace(/^./, str => str.toUpperCase())
-              .replace(/Enable /g, '')}
-          </label>
-        </div>
-      ))}
-    </div>
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <InfoIcon sx={{ mr: 1 }} />
+          Configure which notifications should be sent to users and through which channels.
+        </Alert>
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enableEmailNotifications}
+              onChange={() => handleCheckboxChange('notifications', 'enableEmailNotifications')}
+              color="primary"
+            />
+          }
+          label="Enable Email Notifications"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enableAppNotifications}
+              onChange={() => handleCheckboxChange('notifications', 'enableAppNotifications')}
+              color="primary"
+            />
+          }
+          label="Enable In-App Notifications"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enableAttendanceReminders}
+              onChange={() => handleCheckboxChange('notifications', 'enableAttendanceReminders')}
+              color="primary"
+            />
+          }
+          label="Enable Attendance Reminders"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enableLeaveApprovalNotifications}
+              onChange={() => handleCheckboxChange('notifications', 'enableLeaveApprovalNotifications')}
+              color="primary"
+            />
+          }
+          label="Enable Leave Approval Notifications"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enablePayrollProcessingNotifications}
+              onChange={() => handleCheckboxChange('notifications', 'enablePayrollProcessingNotifications')}
+              color="primary"
+            />
+          }
+          label="Enable Payroll Processing Notifications"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enableBirthdayNotifications}
+              onChange={() => handleCheckboxChange('notifications', 'enableBirthdayNotifications')}
+              color="primary"
+            />
+          }
+          label="Enable Birthday Notifications"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notifications.enablePerformanceReviewNotifications}
+              onChange={() => handleCheckboxChange('notifications', 'enablePerformanceReviewNotifications')}
+              color="primary"
+            />
+          }
+          label="Enable Performance Review Notifications"
+        />
+      </Grid>
+    </Grid>
   );
 
   const renderSecuritySettings = () => (
-    <div className="space-y-4">
-      <Select
-        label="Password Policy"
-        value={settings.security.passwordPolicy}
-        onChange={(e) => handleInputChange('security', 'passwordPolicy', e.target.value)}
-        options={[
-          { value: 'low', label: 'Low - Minimum 6 characters' },
-          { value: 'medium', label: 'Medium - Minimum 8 characters with numbers' },
-          { value: 'high', label: 'High - Minimum 10 characters with special chars, numbers, and mixed case' }
-        ]}
-      />
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <InfoIcon sx={{ mr: 1 }} />
+          Configure security settings to protect your system and user data.
+        </Alert>
+      </Grid>
       
-      <Input
-        label="Session Timeout (minutes)"
-        value={settings.security.sessionTimeout}
-        onChange={(e) => handleInputChange('security', 'sessionTimeout', e.target.value)}
-        type="number"
-        min="5"
-        max="180"
-      />
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Password Policy</InputLabel>
+          <Select
+            value={settings.security.passwordPolicy}
+            onChange={(e) => handleInputChange('security', 'passwordPolicy', e.target.value)}
+            label="Password Policy"
+          >
+            <MenuItem value="low">Low (Minimum 6 characters)</MenuItem>
+            <MenuItem value="medium">Medium (Minimum 8 characters, numbers)</MenuItem>
+            <MenuItem value="high">High (Minimum 12 characters, numbers, special chars)</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Input
-        label="Maximum Login Attempts"
-        value={settings.security.maxLoginAttempts}
-        onChange={(e) => handleInputChange('security', 'maxLoginAttempts', e.target.value)}
-        type="number"
-        min="3"
-        max="10"
-      />
-      
-      <Input
-        label="Password Expiry (days)"
-        value={settings.security.passwordExpiryDays}
-        onChange={(e) => handleInputChange('security', 'passwordExpiryDays', e.target.value)}
-        type="number"
-        min="30"
-        max="365"
-      />
-      
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="twoFactorAuthentication"
-          checked={settings.security.twoFactorAuthentication}
-          onChange={() => handleCheckboxChange('security', 'twoFactorAuthentication')}
-          className="mr-2"
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Session Timeout (minutes)"
+          value={settings.security.sessionTimeout}
+          onChange={(e) => handleInputChange('security', 'sessionTimeout', e.target.value)}
+          type="number"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <TimeIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
         />
-        <label htmlFor="twoFactorAuthentication">Enable Two-Factor Authentication</label>
-      </div>
+      </Grid>
       
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="ipRestriction"
-          checked={settings.security.ipRestriction}
-          onChange={() => handleCheckboxChange('security', 'ipRestriction')}
-          className="mr-2"
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Max Login Attempts"
+          value={settings.security.maxLoginAttempts}
+          onChange={(e) => handleInputChange('security', 'maxLoginAttempts', e.target.value)}
+          type="number"
         />
-        <label htmlFor="ipRestriction">Enable IP Restriction</label>
-      </div>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Password Expiry (days)"
+          value={settings.security.passwordExpiryDays}
+          onChange={(e) => handleInputChange('security', 'passwordExpiryDays', e.target.value)}
+          type="number"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.security.twoFactorAuthentication}
+              onChange={() => handleCheckboxChange('security', 'twoFactorAuthentication')}
+              color="primary"
+            />
+          }
+          label="Enable Two-Factor Authentication"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.security.ipRestriction}
+              onChange={() => handleCheckboxChange('security', 'ipRestriction')}
+              color="primary"
+            />
+          }
+          label="Enable IP Restriction"
+        />
+      </Grid>
       
       {settings.security.ipRestriction && (
-        <Input
-          label="Allowed IP Addresses (comma separated)"
-          value={settings.security.allowedIPs}
-          onChange={(e) => handleInputChange('security', 'allowedIPs', e.target.value)}
-          placeholder="e.g., 192.168.1.1, 10.0.0.1"
-        />
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Allowed IP Addresses"
+            value={settings.security.allowedIPs}
+            onChange={(e) => handleInputChange('security', 'allowedIPs', e.target.value)}
+            placeholder="Enter IP addresses separated by commas"
+            multiline
+            rows={3}
+          />
+        </Grid>
       )}
-    </div>
+    </Grid>
   );
 
   const renderBackupSettings = () => (
-    <div className="space-y-4">
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="automaticBackup"
-          checked={settings.backup.automaticBackup}
-          onChange={() => handleCheckboxChange('backup', 'automaticBackup')}
-          className="mr-2"
-        />
-        <label htmlFor="automaticBackup">Enable Automatic Backup</label>
-      </div>
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <InfoIcon sx={{ mr: 1 }} />
+          Configure automatic backup settings to protect your data.
+        </Alert>
+      </Grid>
       
-      {settings.backup.automaticBackup && (
-        <>
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.backup.automaticBackup}
+              onChange={() => handleCheckboxChange('backup', 'automaticBackup')}
+              color="primary"
+            />
+          }
+          label="Enable Automatic Backup"
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Backup Frequency</InputLabel>
           <Select
-            label="Backup Frequency"
             value={settings.backup.backupFrequency}
             onChange={(e) => handleInputChange('backup', 'backupFrequency', e.target.value)}
-            options={[
-              { value: 'daily', label: 'Daily' },
-              { value: 'weekly', label: 'Weekly' },
-              { value: 'monthly', label: 'Monthly' }
-            ]}
-          />
-          
-          <Input
-            label="Backup Time (HH:MM)"
-            value={settings.backup.backupTime}
-            onChange={(e) => handleInputChange('backup', 'backupTime', e.target.value)}
-            type="time"
-          />
-        </>
-      )}
+            label="Backup Frequency"
+          >
+            <MenuItem value="daily">Daily</MenuItem>
+            <MenuItem value="weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Select
-        label="Storage Location"
-        value={settings.backup.storageLocation}
-        onChange={(e) => handleInputChange('backup', 'storageLocation', e.target.value)}
-        options={[
-          { value: 'local', label: 'Local Storage' },
-          { value: 'cloud', label: 'Cloud Storage' },
-          { value: 'both', label: 'Both Local and Cloud' }
-        ]}
-      />
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Backup Time"
+          value={settings.backup.backupTime}
+          onChange={(e) => handleInputChange('backup', 'backupTime', e.target.value)}
+          type="time"
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
+      </Grid>
       
-      <Input
-        label="Retention Period (days)"
-        value={settings.backup.retentionPeriod}
-        onChange={(e) => handleInputChange('backup', 'retentionPeriod', e.target.value)}
-        type="number"
-        min="7"
-        max="365"
-      />
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Storage Location</InputLabel>
+          <Select
+            value={settings.backup.storageLocation}
+            onChange={(e) => handleInputChange('backup', 'storageLocation', e.target.value)}
+            label="Storage Location"
+          >
+            <MenuItem value="cloud">Cloud Storage</MenuItem>
+            <MenuItem value="local">Local Storage</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
       
-      <Button 
-        label="Backup Now" 
-        variant="secondary" 
-        onClick={() => toast.info('Manual backup initiated')}
-      />
-    </div>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Retention Period (days)"
+          value={settings.backup.retentionPeriod}
+          onChange={(e) => handleInputChange('backup', 'retentionPeriod', e.target.value)}
+          type="number"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Button
+          variant="outlined"
+          startIcon={<CloudUploadIcon />}
+          sx={{ mt: 1 }}
+        >
+          Manual Backup Now
+        </Button>
+      </Grid>
+    </Grid>
   );
 
   // Render the appropriate tab content
@@ -454,96 +740,154 @@ const SystemSettings = () => {
       case 'backup':
         return renderBackupSettings();
       default:
-        return renderGeneralSettings();
+        return null;
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">System Settings</h1>
-        <p className="text-gray-600">Configure system-wide settings for your organization</p>
-      </div>
+    <MainLayout>
+      <Box sx={{ p: 3 }}>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', link: '/dashboard' },
+            { label: 'Settings', link: '/settings' },
+            { label: 'System Settings', link: '/settings/system' },
+          ]}
+        />
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Left Sidebar - Navigation Tabs */}
-          <div className="col-span-1">
-            <Card>
-              <ul className="divide-y divide-gray-200">
-                {['general', 'email', 'notifications', 'security', 'backup'].map((tab) => (
-                  <li key={tab}>
-                    <button
-                      className={`w-full text-left py-3 px-4 ${
-                        currentTab === tab
-                          ? 'bg-blue-50 text-blue-600 font-medium'
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => setCurrentTab(tab)}
-                    >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)} Settings
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </div>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              System Settings
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Configure system-wide settings and preferences
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={saveLoading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            onClick={handleSaveSettings}
+            disabled={saveLoading}
+            sx={{
+              background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+              }
+            }}
+          >
+            {saveLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </Box>
 
-          {/* Right Content Area */}
-          <div className="col-span-1 md:col-span-3">
-            <Card>
-              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-4">
-                  {currentTab.charAt(0).toUpperCase() + currentTab.slice(1)} Settings
-                </h2>
-                {renderTabContent()}
-                <div className="mt-6 flex justify-end">
-                  <Button
-                    label="Save Changes"
-                    onClick={handleSaveSettings}
-                    loading={saveLoading}
-                    variant="primary"
-                  />
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      )}
+        <Fade in timeout={500}>
+          <Card elevation={3} sx={{ borderRadius: 2 }}>
+            <CardContent sx={{ p: 0 }}>
+              <Tabs
+                value={currentTab}
+                onChange={(e, newValue) => setCurrentTab(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  '& .MuiTab-root': {
+                    minWidth: 120,
+                    textTransform: 'none',
+                    fontWeight: 500,
+                  }
+                }}
+              >
+                <Tab
+                  icon={<SettingsIcon />}
+                  label="General"
+                  value="general"
+                  iconPosition="start"
+                />
+                <Tab
+                  icon={<EmailIcon />}
+                  label="Email"
+                  value="email"
+                  iconPosition="start"
+                />
+                <Tab
+                  icon={<NotificationsIcon />}
+                  label="Notifications"
+                  value="notifications"
+                  iconPosition="start"
+                />
+                <Tab
+                  icon={<SecurityIcon />}
+                  label="Security"
+                  value="security"
+                  iconPosition="start"
+                />
+                <Tab
+                  icon={<BackupIcon />}
+                  label="Backup"
+                  value="backup"
+                  iconPosition="start"
+                />
+              </Tabs>
+              
+              <Box sx={{ p: 3 }}>
+                {loading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <Zoom in timeout={300}>
+                    <Box>
+                      {renderTabContent()}
+                    </Box>
+                  </Zoom>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Fade>
 
-      {/* Test Email Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Send Test Email"
-      >
-        <div className="p-4">
-          <p className="mb-4">
-            This will send a test email using the configured SMTP settings to verify your email configuration.
-          </p>
-          <Input
-            label="Recipient Email"
-            placeholder="Enter email address to receive test"
-          />
-          <div className="mt-4 flex justify-end space-x-2">
-            <Button
-              label="Cancel"
-              onClick={() => setIsModalOpen(false)}
-              variant="secondary"
+        <Dialog
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Test Email Connection</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              This will send a test email to verify your email settings are configured correctly.
+            </Typography>
+            <TextField
+              fullWidth
+              label="Test Email Address"
+              placeholder="Enter email address to send test email"
+              value={testEmailAddress}
+              onChange={(e) => setTestEmailAddress(e.target.value)}
+              sx={{ mt: 2 }}
             />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button
-              label="Send Test Email"
+              variant="contained"
               onClick={sendTestEmail}
-              variant="primary"
-            />
-          </div>
-        </div>
-      </Modal>
-    </div>
+              startIcon={<SendIcon />}
+              sx={{
+                background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                color: 'white',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+                }
+              }}
+            >
+              Send Test Email
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </MainLayout>
   );
 };
 

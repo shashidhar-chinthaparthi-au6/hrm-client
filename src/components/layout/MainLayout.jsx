@@ -21,6 +21,7 @@ const AddEmployee = lazy(() => import('../../pages/employees/AddEmployee'));
 const OrganizationChart = lazy(() => import('../../pages/employee/OrganizationChart'));
 const EmployeeDetails = lazy(() => import('../../pages/employee/EmployeeDetails'));
 const EditEmployee = lazy(() => import('../../pages/employee/EditEmployee'));
+const Profile = lazy(() => import('../../pages/auth/Profile'));
 
 const AttendanceManagement = lazy(() => import('../../pages/attendance/AttendanceManagement'));
 const AttendanceReport = lazy(() => import('../../pages/attendance/AttendanceReport'));
@@ -250,7 +251,7 @@ const SimpleSidebar = ({ isOpen, onToggle, userRole = 'user' }) => {
   );
 };
 
-const SimpleHeader = ({ onToggleSidebar, userName = 'User' }) => {
+const SimpleHeader = ({ onToggleSidebar, userName = 'User', onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -258,6 +259,7 @@ const SimpleHeader = ({ onToggleSidebar, userName = 'User' }) => {
   const getCurrentPageName = () => {
     const path = location.pathname;
     if (path === '/dashboard') return 'Dashboard';
+    if (path === '/profile') return 'Profile';
     
     // For nested routes like /employees/add
     const mainPath = path.split('/')[1];
@@ -279,7 +281,7 @@ const SimpleHeader = ({ onToggleSidebar, userName = 'User' }) => {
   };
   
   const handleLogout = () => {
-    // For development, just navigate to login
+    onLogout();
     navigate('/login');
   };
   
@@ -336,6 +338,8 @@ const MainContent = ({ path }) => {
     switch (currentPath) {
       case '/dashboard':
         return <Dashboard />;
+      case '/profile':
+        return <Profile />;
       
       // Employee paths
       case '/employees':
@@ -502,7 +506,11 @@ const MainLayout = ({
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <SimpleHeader onToggleSidebar={toggleSidebar} userName={user.name} />
+        <SimpleHeader 
+          onToggleSidebar={toggleSidebar} 
+          userName={user.name} 
+          onLogout={onLogout}
+        />
         
         <Box component="main" sx={{ 
           flexGrow: 1, 

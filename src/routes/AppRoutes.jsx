@@ -2,7 +2,7 @@
 
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import {useAuth} from '../hooks/useAuth';
 
 // Layouts
 import MainLayout from '../components/layout/MainLayout';
@@ -63,6 +63,18 @@ const RolePermissions = lazy(() => import('../pages/settings/RolePermissions'));
 // Loading fallback for lazy components
 const LoadingFallback = () => <LoadingSpinner fullScreen />;
 
+// MainLayout wrapper to provide auth context
+const MainLayoutWrapper = () => {
+  const { user, logout } = useAuth();
+  
+  return (
+    <MainLayout
+      user={user}
+      onLogout={logout}
+    />
+  );
+};
+
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
 
@@ -80,7 +92,7 @@ const AppRoutes = () => {
 
         {/* Private routes */}
         <Route element={<PrivateRoute />}>
-          <Route element={<MainLayout />}>
+          <Route element={<MainLayoutWrapper />}>
             {/* Dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
@@ -132,7 +144,7 @@ const AppRoutes = () => {
 
         {/* Admin-only routes */}
         <Route element={<AdminRoute />}>
-          <Route element={<MainLayout />}>
+          <Route element={<MainLayoutWrapper />}>
             {/* Admin settings routes */}
             <Route path="/admin/settings">
               <Route path="company" element={<CompanySettings />} />

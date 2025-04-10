@@ -1,31 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import MainLayout from '../../components/layout/MainLayout';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
-import Avatar from '../../components/common/Avatar';
-import Modal from '../../components/common/Modal';
-// import { useAuth } from '../../hooks/useAuth';
-// import { useToast } from '../../hooks/useToast';
+import {
+  Box,
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Avatar,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  Alert,
+  CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Divider
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Lock as LockIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Business as BusinessIcon,
+  LocationOn as LocationIcon,
+  Person as PersonIcon,
+  PhotoCamera as PhotoCameraIcon,
+  Visibility,
+  VisibilityOff
+} from '@mui/icons-material';
+import { useAuth } from '../../hooks/useAuth';
+import useToast from '../../hooks/useToast';
+import { getAuthData, setAuthData } from '../../utils/storage';
+import { employeeService } from '../../services/employeeService';
+import api from '../../services/api';
 
 const Profile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, updateUserProfile, logout } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    department: '',
+    department: { name: '' },
+    designation: { name: '' },
     position: '',
+    jobTitle: '',
     joiningDate: '',
     address: '',
     city: '',
@@ -49,19 +88,44 @@ const Profile = () => {
     const fetchProfileData = async () => {
       try {
         setLoading(true);
-        // If id is provided, we're viewing someone else's profile
-        const endpoint = id ? `/api/employees/${id}` : '/api/employees/me';
-        const response = await fetch(endpoint);
+        setError(null);
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile data');
+        let response;
+        if (id) {
+          response = await employeeService.getById(id);
+        } else {
+          response = await employeeService.getCurrentUser();
         }
         
-        const data = await response.json();
-        setProfileData(data);
+        if (response?.data) {
+          const data = response.data;
+          const jobTitle = data.jobTitle || data.designation?.name || '';
+          setProfileData({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            department: data.department || { name: '' },
+            designation: data.designation || { name: '' },
+            position: jobTitle,
+            jobTitle: jobTitle,
+            joiningDate: data.dateOfJoining || '',
+            address: data.address || '',
+            city: data.city || '',
+            state: data.state || '',
+            country: data.country || '',
+            zipCode: data.zipCode || '',
+            emergencyContact: data.emergencyContact || '',
+            emergencyPhone: data.emergencyPhone || '',
+            bio: data.bio || '',
+            skills: data.skills || [],
+            profileImage: data.profileImage || '',
+          });
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
-        showToast('Failed to load profile data', 'error');
+        setError(error.message || 'Failed to load profile data');
+        showToast(error.message || 'Failed to load profile data', 'error');
       } finally {
         setLoading(false);
       }
@@ -72,10 +136,30 @@ const Profile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'position') {
+      // When position changes, update position and jobTitle
+      setProfileData(prev => ({
+        ...prev,
+        position: value,
+        jobTitle: value
+      }));
+    } else if (name === 'department') {
+      setProfileData(prev => ({
+        ...prev,
+        department: { _id: value }
+      }));
+    } else if (name === 'designation') {
+      setProfileData(prev => ({
+        ...prev,
+        designation: { _id: value }
+      }));
+    } else {
+      setProfileData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -86,33 +170,95 @@ const Profile = () => {
     }));
   };
 
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    
+  const handleSaveProfile = async () => {
     try {
       setSaving(true);
+      setError(null);
       
-      const response = await fetch('/api/employees/me', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      // Get the current position value
+      const currentPosition = profileData.position || '';
+      
+      // Prepare data for saving - ensure proper object formatting
+      const dataToSave = {
+        firstName: profileData.firstName || '',
+        lastName: profileData.lastName || '',
+        email: profileData.email || '',
+        phone: profileData.phone || '',
+        // Ensure department and designation are proper objects
+        department: {
+          _id: profileData.department?._id || profileData.department?.id
         },
-        body: JSON.stringify(profileData),
-      });
+        designation: {
+          _id: profileData.designation?._id || profileData.designation?.id
+        },
+        jobTitle: currentPosition,
+        dateOfJoining: profileData.joiningDate || profileData.dateOfJoining || '',
+        address: profileData.address || '',
+        city: profileData.city || '',
+        state: profileData.state || '',
+        country: profileData.country || '',
+        zipCode: profileData.zipCode || '',
+        emergencyContact: profileData.emergencyContact || '',
+        emergencyPhone: profileData.emergencyPhone || '',
+        bio: profileData.bio || '',
+        skills: Array.isArray(profileData.skills) ? profileData.skills : [],
+        profileImage: profileData.profileImage || ''
+      };
       
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
+      console.log('Saving profile data:', JSON.stringify(dataToSave, null, 2));
+      
+      let response;
+      try {
+        if (id) {
+          response = await employeeService.update(id, dataToSave);
+        } else {
+          response = await employeeService.updateCurrentUser(dataToSave);
+        }
+        
+        console.log('API Response:', JSON.stringify(response, null, 2));
+        
+        if (!response?.data) {
+          throw new Error('No data received from server');
+        }
+
+        const responseData = response.data;
+        
+        // Update local state with response data
+        const updatedProfile = {
+          ...responseData,
+          position: responseData.jobTitle || currentPosition,
+          joiningDate: responseData.dateOfJoining || responseData.joiningDate,
+          department: responseData.department || profileData.department,
+          designation: responseData.designation || profileData.designation
+        };
+        
+        console.log('Updated profile:', JSON.stringify(updatedProfile, null, 2));
+        
+        setProfileData(updatedProfile);
+        
+        // Update auth data
+        const authData = getAuthData();
+        if (authData) {
+          const updatedAuthData = {
+            ...authData,
+            user: {
+              ...authData.user,
+              ...updatedProfile
+            }
+          };
+          setAuthData(updatedAuthData, true);
+        }
+        
+        showToast('Profile updated successfully', 'success');
+        setIsEditing(false);
+      } catch (error) {
+        throw new Error(`API Error: ${error.message}`);
       }
-      
-      const updatedProfile = await response.json();
-      setProfileData(updatedProfile);
-      updateUserProfile(updatedProfile);
-      
-      showToast('Profile updated successfully', 'success');
-      setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-      showToast('Failed to update profile', 'error');
+      const errorMessage = error.message || 'Failed to update profile';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setSaving(false);
     }
@@ -128,32 +274,27 @@ const Profile = () => {
     
     try {
       setSaving(true);
+      setError(null);
       
-      const response = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        }),
+      const response = await api.post('/auth/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update password');
+      if (response?.data) {
+        showToast('Password changed successfully', 'success');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setShowPasswordModal(false);
+      } else {
+        throw new Error('Failed to change password');
       }
-      
-      showToast('Password changed successfully', 'success');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setShowPasswordModal(false);
     } catch (error) {
       console.error('Error changing password:', error);
+      setError(error.message || 'Failed to change password');
       showToast(error.message || 'Failed to change password', 'error');
     } finally {
       setSaving(false);
@@ -162,37 +303,104 @@ const Profile = () => {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      showToast('No file selected', 'error');
+      return;
+    }
     
-    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       showToast('Image size should be less than 5MB', 'error');
       return;
     }
     
     try {
+      setSaving(true);
+      setError(null);
+      
+      // Create FormData and append file
       const formData = new FormData();
       formData.append('profileImage', file);
       
-      const response = await fetch('/api/employees/me/profile-image', {
-        method: 'POST',
-        body: formData,
+      // Debug log for file and FormData
+      console.log('File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
+      // Debug log for FormData
+      for (let pair of formData.entries()) {
+        console.log('FormData entry:', pair[0], pair[1]);
       }
       
+      // Get auth token
+      const token = getAuthData()?.token;
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      // Create request options
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      };
+      
+      console.log('Sending request with options:', {
+        method: requestOptions.method,
+        headers: requestOptions.headers,
+        formDataKeys: [...formData.keys()]
+      });
+      
+      // Make the request
+      const response = await fetch('http://localhost:5000/api/employees/me/profile-image', requestOptions);
       const data = await response.json();
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', [...response.headers.entries()]);
+      console.log('Response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+      
+      if (!data?.data?.profileImage && !data?.profileImage) {
+        throw new Error('No image URL in response');
+      }
+      
+      const imageUrl = data.data?.profileImage || data.profileImage;
+      console.log('Received image URL:', imageUrl);
+      
+      // Update local state
       setProfileData(prev => ({
         ...prev,
-        profileImage: data.profileImage
+        profileImage: imageUrl
       }));
-      
-      showToast('Profile image updated', 'success');
+
+      // Update auth data
+      const authData = getAuthData();
+      if (authData) {
+        const updatedAuthData = {
+          ...authData,
+          user: {
+            ...authData.user,
+            profileImage: imageUrl
+          }
+        };
+        setAuthData(updatedAuthData, true);
+      }
+
+      showToast('Profile image updated successfully', 'success');
     } catch (error) {
       console.error('Error uploading image:', error);
-      showToast('Failed to upload profile image', 'error');
+      const errorMessage = error.message || 'Failed to upload profile image';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -200,351 +408,432 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex justify-center items-center h-64">
-          <p>Loading profile...</p>
-        </div>
-      </MainLayout>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: 'white' }} />
+      </Box>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">
-            {isOwnProfile ? 'My Profile' : `${profileData.firstName} ${profileData.lastName}'s Profile`}
-          </h1>
-          
-          {isOwnProfile && (
-            <div className="flex space-x-3">
-              {isEditing ? (
-                <>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsEditing(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={handleSaveProfile}
-                    loading={saving}
-                  >
-                    Save Changes
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    variant="outline" 
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+        py: 4,
+        px: 2
+      }}
+    >
+      <Container maxWidth="lg">
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            borderRadius: 2
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+            <Box sx={{ position: 'relative', mr: 3 }}>
+              <Avatar
+                src={profileData.profileImage}
+                sx={{
+                  width: 120,
+                  height: 120,
+                  border: '4px solid white',
+                  boxShadow: 3
+                }}
+              />
+              {isOwnProfile && (
+                <IconButton
+                  component="label"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: 'primary.main',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                  }}
+                  disabled={saving}
+                >
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleImageUpload(e);
+                      }
+                    }}
+                  />
+                  <PhotoCameraIcon sx={{ color: 'white' }} />
+                </IconButton>
+              )}
+            </Box>
+            <Box>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                {profileData.firstName} {profileData.lastName}
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary">
+                {profileData.position || 'N/A'} at {profileData.department?.name || 'N/A'}
+              </Typography>
+              {isOwnProfile && (
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<LockIcon />}
                     onClick={() => setShowPasswordModal(true)}
+                    sx={{ mr: 2 }}
+                    disabled={saving}
                   >
                     Change Password
                   </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={() => setIsEditing(true)}
+                  <Button
+                    variant="contained"
+                    startIcon={isEditing ? <SaveIcon /> : <EditIcon />}
+                    onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+                    disabled={saving}
                   >
-                    Edit Profile
+                    {saving ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : isEditing ? (
+                      'Save Changes'
+                    ) : (
+                      'Edit Profile'
+                    )}
                   </Button>
-                </>
+                </Box>
               )}
-            </div>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left column - Profile picture and basic info */}
-          <div className="col-span-1">
-            <Card>
-              <div className="flex flex-col items-center p-4">
-                <div className="mb-4 relative">
-                  <Avatar 
-                    src={profileData.profileImage} 
-                    name={`${profileData.firstName} ${profileData.lastName}`} 
-                    size="xl" 
+            </Box>
+          </Box>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Personal Information
+              </Typography>
+              <TextField
+                fullWidth
+                label="First Name"
+                name="firstName"
+                value={profileData.firstName}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Last Name"
+                name="lastName"
+                value={profileData.lastName}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={profileData.email}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Phone"
+                name="phone"
+                value={profileData.phone}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PhoneIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Work Information
+              </Typography>
+              <TextField
+                fullWidth
+                label="Department"
+                name="department"
+                value={profileData.department?.name || ''}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <BusinessIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Position"
+                name="position"
+                value={profileData.position}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <BusinessIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Joining Date"
+                name="joiningDate"
+                type="date"
+                value={profileData.joiningDate}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Bio"
+                name="bio"
+                multiline
+                rows={4}
+                value={profileData.bio}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Address Information
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Address"
+                    name="address"
+                    value={profileData.address}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LocationIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
-                  
-                  {isEditing && isOwnProfile && (
-                    <div className="absolute bottom-0 right-0">
-                      <label className="cursor-pointer bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept="image/*" 
-                          onChange={handleImageUpload} 
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-                
-                <h2 className="text-xl font-semibold">
-                  {profileData.firstName} {profileData.lastName}
-                </h2>
-                <p className="text-gray-600">{profileData.position}</p>
-                <p className="text-gray-500 text-sm">{profileData.department}</p>
-                
-                <div className="w-full border-t border-gray-200 my-4"></div>
-                
-                <div className="w-full">
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p>{profileData.email}</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p>{profileData.phone || 'Not provided'}</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-500">Joined</p>
-                    <p>{new Date(profileData.joiningDate).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-            
-            <Card className="mt-6">
-              <div className="p-4">
-                <h3 className="font-semibold mb-3">Skills & Expertise</h3>
-                
-                {profileData.skills && profileData.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.skills.map((skill, index) => (
-                      <span 
-                        key={index} 
-                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">No skills listed</p>
-                )}
-              </div>
-            </Card>
-          </div>
-          
-          {/* Right column - Detailed information */}
-          <div className="col-span-1 md:col-span-2">
-            <Card>
-              <div className="p-4">
-                <h3 className="font-semibold mb-4">Personal Information</h3>
-                
-                <form onSubmit={handleSaveProfile}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="First Name"
-                      name="firstName"
-                      value={profileData.firstName}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      required
-                    />
-                    
-                    <Input
-                      label="Last Name"
-                      name="lastName"
-                      value={profileData.lastName}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      required
-                    />
-                    
-                    <Input
-                      label="Email"
-                      name="email"
-                      type="email"
-                      value={profileData.email}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      required
-                    />
-                    
-                    <Input
-                      label="Phone"
-                      name="phone"
-                      value={profileData.phone}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                    
-                    <Input
-                      label="Department"
-                      name="department"
-                      value={profileData.department}
-                      onChange={handleInputChange}
-                      disabled={true} // Department usually changed by HR
-                    />
-                    
-                    <Input
-                      label="Position"
-                      name="position"
-                      value={profileData.position}
-                      onChange={handleInputChange}
-                      disabled={true} // Position usually changed by HR
-                    />
-                    
-                    <Input
-                      label="Joining Date"
-                      name="joiningDate"
-                      type="date"
-                      value={profileData.joiningDate ? profileData.joiningDate.split('T')[0] : ''}
-                      onChange={handleInputChange}
-                      disabled={true} // Joining date usually set by HR
-                    />
-                  </div>
-                  
-                  <h3 className="font-semibold mb-4 mt-6">Address Information</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <Input
-                        label="Address"
-                        name="address"
-                        value={profileData.address}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    
-                    <Input
-                      label="City"
-                      name="city"
-                      value={profileData.city}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                    
-                    <Input
-                      label="State/Province"
-                      name="state"
-                      value={profileData.state}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                    
-                    <Input
-                      label="Country"
-                      name="country"
-                      value={profileData.country}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                    
-                    <Input
-                      label="Zip/Postal Code"
-                      name="zipCode"
-                      value={profileData.zipCode}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <h3 className="font-semibold mb-4 mt-6">Emergency Contact</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="Contact Name"
-                      name="emergencyContact"
-                      value={profileData.emergencyContact}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                    
-                    <Input
-                      label="Contact Phone"
-                      name="emergencyPhone"
-                      value={profileData.emergencyPhone}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <h3 className="font-semibold mb-4 mt-6">Additional Information</h3>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    <Input
-                      label="Bio"
-                      name="bio"
-                      value={profileData.bio}
-                      onChange={handleInputChange}
-                      multiline
-                      rows={4}
-                      disabled={!isEditing}
-                      placeholder="Tell us about yourself"
-                    />
-                  </div>
-                </form>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
-      
-      {/* Change Password Modal */}
-      <Modal
-        isOpen={showPasswordModal}
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="City"
+                    name="city"
+                    value={profileData.city}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="State"
+                    name="state"
+                    value={profileData.state}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Country"
+                    name="country"
+                    value={profileData.country}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="ZIP Code"
+                    name="zipCode"
+                    value={profileData.zipCode}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
+
+      <Dialog
+        open={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
-        title="Change Password"
+        maxWidth="sm"
+        fullWidth
       >
-        <form onSubmit={handleUpdatePassword}>
-          <div className="space-y-4">
-            <Input
+        <DialogTitle>Change Password</DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleUpdatePassword} sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
               label="Current Password"
               name="currentPassword"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={passwordData.currentPassword}
               onChange={handlePasswordChange}
-              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
             />
-            
-            <Input
+            <TextField
+              fullWidth
               label="New Password"
               name="newPassword"
-              type="password"
+              type={showNewPassword ? 'text' : 'password'}
               value={passwordData.newPassword}
               onChange={handlePasswordChange}
-              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      edge="end"
+                    >
+                      {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
             />
-            
-            <Input
+            <TextField
+              fullWidth
               label="Confirm New Password"
               name="confirmPassword"
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               value={passwordData.confirmPassword}
               onChange={handlePasswordChange}
-              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
-            
-            <div className="flex justify-end space-x-3 mt-4">
-              <Button 
-                variant="outline" 
-                type="button" 
-                onClick={() => setShowPasswordModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="primary" 
-                type="submit" 
-                loading={saving}
-              >
-                Update Password
-              </Button>
-            </div>
-          </div>
-        </form>
-      </Modal>
-    </MainLayout>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowPasswordModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpdatePassword}
+            variant="contained"
+            disabled={saving}
+            sx={{
+              background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+              }
+            }}
+          >
+            {saving ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Update Password'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

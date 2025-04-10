@@ -13,9 +13,19 @@ import {
   CircularProgress,
   Checkbox,
   FormControlLabel,
-  Grid
+  Grid,
+  Container,
+  Paper
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import {
+  Visibility,
+  VisibilityOff,
+  Person as PersonIcon,
+  Business as BusinessIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Lock as LockIcon
+} from '@mui/icons-material';
 import { AuthContext } from '../../contexts/AuthContext';
 
 const Register = () => {
@@ -124,198 +134,292 @@ const Register = () => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-      <Typography variant="h5" component="h1" gutterBottom align="center">
-        Create Your Account
-      </Typography>
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="First Name"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            error={Boolean(errors.firstName)}
-            helperText={errors.firstName}
-            fullWidth
-            required
-            disabled={loading}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Last Name"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            error={Boolean(errors.lastName)}
-            helperText={errors.lastName}
-            fullWidth
-            required
-            disabled={loading}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            label="Company Name"
-            name="companyName"
-            value={formData.companyName}
-            onChange={handleChange}
-            error={Boolean(errors.companyName)}
-            helperText={errors.companyName}
-            fullWidth
-            required
-            disabled={loading}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            label="Email Address"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={Boolean(errors.email)}
-            helperText={errors.email}
-            fullWidth
-            required
-            disabled={loading}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            label="Phone Number"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            error={Boolean(errors.phoneNumber)}
-            helperText={errors.phoneNumber}
-            fullWidth
-            required
-            disabled={loading}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            value={formData.password}
-            onChange={handleChange}
-            error={Boolean(errors.password)}
-            helperText={errors.password}
-            fullWidth
-            required
-            disabled={loading}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                    disabled={loading}
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              )
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+        py: 4,
+        px: 2
+      }}
+    >
+      <Container maxWidth="md">
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            borderRadius: 2
+          }}
+        >
+          <Typography
+            component="h1"
+            variant="h4"
+            sx={{
+              mb: 1,
+              fontWeight: 700,
+              color: 'primary.main'
             }}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Confirm Password"
-            name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={Boolean(errors.confirmPassword)}
-            helperText={errors.confirmPassword}
-            fullWidth
-            required
-            disabled={loading}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    edge="end"
-                    disabled={loading}
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              )
+          >
+            Create Your Account
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              mb: 4,
+              color: 'text.secondary'
             }}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
-                name="agreeToTerms"
-                disabled={loading}
-              />
-            }
-            label={
-              <Typography variant="body2">
-                I agree to the{' '}
-                <MuiLink component={Link} to="/terms">
-                  Terms of Service
-                </MuiLink>
-                {' '}and{' '}
-                <MuiLink component={Link} to="/privacy">
-                  Privacy Policy
+          >
+            Join us to manage your HR operations efficiently
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="First Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  error={Boolean(errors.firstName)}
+                  helperText={errors.firstName}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  error={Boolean(errors.lastName)}
+                  helperText={errors.lastName}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Company Name"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  error={Boolean(errors.companyName)}
+                  helperText={errors.companyName}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <BusinessIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={Boolean(errors.email)}
+                  helperText={errors.email}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Phone Number"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  error={Boolean(errors.phoneNumber)}
+                  helperText={errors.phoneNumber}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={Boolean(errors.password)}
+                  helperText={errors.password}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={Boolean(errors.confirmPassword)}
+                  helperText={errors.confirmPassword}
+                  fullWidth
+                  required
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onChange={handleChange}
+                      disabled={loading}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">
+                      I agree to the{' '}
+                      <MuiLink component={Link} to="/terms" underline="hover">
+                        Terms of Service
+                      </MuiLink>{' '}
+                      and{' '}
+                      <MuiLink component={Link} to="/privacy" underline="hover">
+                        Privacy Policy
+                      </MuiLink>
+                    </Typography>
+                  }
+                />
+                {errors.agreeToTerms && (
+                  <Typography color="error" variant="caption" sx={{ display: 'block', mt: 1 }}>
+                    {errors.agreeToTerms}
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={loading}
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+                background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+                }
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Create Account'
+              )}
+            </Button>
+
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Already have an account?{' '}
+                <MuiLink component={Link} to="/login" underline="hover">
+                  Sign in
                 </MuiLink>
               </Typography>
-            }
-          />
-          {errors.agreeToTerms && (
-            <Typography color="error" variant="caption" display="block">
-              {errors.agreeToTerms}
-            </Typography>
-          )}
-        </Grid>
-      </Grid>
-      
-      <Button
-        type="submit"
-        fullWidth
-        variant="contained"
-        color="primary"
-        size="large"
-        sx={{ mt: 3, mb: 2 }}
-        disabled={loading}
-      >
-        {loading ? <CircularProgress size={24} /> : 'Create Account'}
-      </Button>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="body2">
-          Already have an account?{' '}
-          <MuiLink component={Link} to="/login">
-            Sign In
-          </MuiLink>
-        </Typography>
-      </Box>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
     </Box>
   );
 };

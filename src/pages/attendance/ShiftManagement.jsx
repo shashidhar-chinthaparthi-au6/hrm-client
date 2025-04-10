@@ -1,12 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Card, Button, Modal, Select, DatePicker, Table, Badge } from '../components/common';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  IconButton,
+  Chip,
+  CircularProgress,
+  Fade,
+  Grid,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tooltip,
+  Divider
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  CalendarToday as CalendarIcon,
+  AccessTime as AccessTimeIcon,
+  People as PeopleIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  FilterList as FilterIcon
+} from '@mui/icons-material';
+import { toast } from 'react-toastify';
+import MainLayout from '../components/layout/MainLayout';
+import Breadcrumbs from '../components/layout/Breadcrumbs';
 import { fetchShifts, createShift, updateShift, deleteShift } from '../redux/actions/shiftActions';
 import { getAllEmployees } from '../redux/actions/employeeActions';
-import { Loader } from '../../components/common/Loader';
-import { toast } from 'react-toastify';
-import { FaPlus, FaEdit, FaTrash, FaCalendarAlt } from 'react-icons/fa';
-import './ShiftManagement.scss';
 
 const ShiftManagement = () => {
   const dispatch = useDispatch();
@@ -140,75 +185,6 @@ const ShiftManagement = () => {
     }
   };
 
-  const columns = [
-    {
-      title: 'Shift Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text, record) => (
-        <div className="flex items-center">
-          <div 
-            className="shift-color-indicator mr-2" 
-            style={{ backgroundColor: record.color }}
-          />
-          <span>{text}</span>
-        </div>
-      ),
-      sorter: (a, b) => a.name.localeCompare(b.name),
-    },
-    {
-      title: 'Timing',
-      dataIndex: 'startTime',
-      key: 'timing',
-      render: (_, record) => `${record.startTime} - ${record.endTime}`,
-    },
-    {
-      title: 'Days',
-      dataIndex: 'daysOfWeek',
-      key: 'days',
-      render: (days) => {
-        const dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return days.map(day => dayMap[day]).join(', ');
-      },
-    },
-    {
-      title: 'Employees',
-      dataIndex: 'employees',
-      key: 'employees',
-      render: (employees) => <span>{employees?.length || 0} assigned</span>,
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (_, record) => (
-        <Badge 
-          type={record.isActive ? 'success' : 'gray'} 
-          text={record.isActive ? 'Active' : 'Inactive'} 
-        />
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <div className="flex space-x-2">
-          <Button 
-            type="primary" 
-            icon={<FaEdit />} 
-            size="small"
-            onClick={() => handleOpenModal('edit', record)}
-          />
-          <Button 
-            type="danger" 
-            icon={<FaTrash />} 
-            size="small"
-            onClick={() => handleDeleteShift(record.id)}
-          />
-        </div>
-      ),
-    },
-  ];
-
   const dayOptions = [
     { value: 0, label: 'Sunday' },
     { value: 1, label: 'Monday' },
@@ -219,167 +195,350 @@ const ShiftManagement = () => {
     { value: 6, label: 'Saturday' },
   ];
 
-  if (loading) return <Loader />;
-  if (error) return <div className="error-message">{error}</div>;
+  const getStatusColor = (isActive) => {
+    return isActive ? 'success' : 'default';
+  };
+
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <CircularProgress />
+    </Box>
+  );
+  
+  if (error) return (
+    <Box sx={{ p: 3, color: 'error.main' }}>
+      <Typography variant="h6">{error}</Typography>
+    </Box>
+  );
 
   return (
-    <div className="shift-management">
-      <div className="page-header">
-        <h1>Shift Management</h1>
-        <Button 
-          type="primary" 
-          icon={<FaPlus />} 
-          onClick={() => handleOpenModal('create')}
-        >
-          Create Shift
-        </Button>
-      </div>
-
-      <div className="filters mb-4">
-        <div className="flex flex-wrap gap-4">
-          <div className="filter-item">
-            <Select
-              label="Department"
-              value={filterDepartment}
-              onChange={(value) => setFilterDepartment(value)}
-              options={[
-                { value: 'all', label: 'All Departments' },
-                { value: 'engineering', label: 'Engineering' },
-                { value: 'hr', label: 'Human Resources' },
-                { value: 'marketing', label: 'Marketing' },
-                { value: 'sales', label: 'Sales' },
-              ]}
-            />
-          </div>
-          <div className="filter-item">
-            <DatePicker
-              label="Month"
-              value={filterMonth}
-              onChange={(date) => setFilterMonth(date)}
-              format="MM/YYYY"
-              picker="month"
-            />
-          </div>
-        </div>
-      </div>
-
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={shifts}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
+    <MainLayout>
+      <Box sx={{ p: 3 }}>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', link: '/dashboard' },
+            { label: 'Attendance', link: '/attendance' },
+            { label: 'Shift Management', link: '/attendance/shift-management' },
+          ]}
         />
-      </Card>
 
-      <Modal
-        title={modalMode === 'create' ? 'Create New Shift' : 'Edit Shift'}
-        visible={showModal}
-        onClose={handleCloseModal}
-        width="600px"
-      >
-        <form onSubmit={handleSubmit} className="shift-form">
-          <div className="form-group">
-            <label htmlFor="name">Shift Name*</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="Morning Shift"
-            />
-          </div>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            Shift Management
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenModal('create')}
+            sx={{
+              background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+              }
+            }}
+          >
+            Create Shift
+          </Button>
+        </Box>
 
-          <div className="form-row">
-            <div className="form-group half">
-              <label htmlFor="startTime">Start Time*</label>
-              <input
-                type="time"
-                id="startTime"
-                name="startTime"
-                value={formData.startTime}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group half">
-              <label htmlFor="endTime">End Time*</label>
-              <input
-                type="time"
-                id="endTime"
-                name="endTime"
-                value={formData.endTime}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
+        <Fade in timeout={500}>
+          <Card elevation={3} sx={{ borderRadius: 2, mb: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <FormControl sx={{ minWidth: 200 }}>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    value={filterDepartment}
+                    label="Department"
+                    onChange={(e) => setFilterDepartment(e.target.value)}
+                  >
+                    <MenuItem value="all">All Departments</MenuItem>
+                    <MenuItem value="engineering">Engineering</MenuItem>
+                    <MenuItem value="hr">Human Resources</MenuItem>
+                    <MenuItem value="marketing">Marketing</MenuItem>
+                    <MenuItem value="sales">Sales</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Filter by Month"
+                    value={filterMonth}
+                    onChange={(date) => setFilterMonth(date)}
+                    views={['year', 'month']}
+                    renderInput={(params) => <TextField {...params} />}
+                  />
+                </LocalizationProvider>
+              </Box>
 
-          <div className="form-group">
-            <label>Days of Week</label>
-            <div className="day-selector">
-              {dayOptions.map((day) => (
-                <div 
-                  key={day.value}
-                  className={`day-option ${formData.daysOfWeek.includes(day.value) ? 'selected' : ''}`}
-                  onClick={() => handleDayToggle(day.value)}
-                >
-                  {day.label.substring(0, 3)}
-                </div>
-              ))}
-            </div>
-          </div>
+              <TableContainer component={Paper} elevation={0}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Shift Name</TableCell>
+                      <TableCell>Timing</TableCell>
+                      <TableCell>Days</TableCell>
+                      <TableCell>Employees</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {shifts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center">
+                          No shifts found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      shifts.map((shift) => (
+                        <TableRow key={shift.id}>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box 
+                                sx={{ 
+                                  width: 16, 
+                                  height: 16, 
+                                  borderRadius: '50%', 
+                                  mr: 1,
+                                  backgroundColor: shift.color || '#3B82F6'
+                                }} 
+                              />
+                              {shift.name}
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <AccessTimeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 16 }} />
+                              {shift.startTime} - {shift.endTime}
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            {shift.daysOfWeek?.map((day, index) => (
+                              <Chip 
+                                key={day} 
+                                label={dayOptions.find(d => d.value === day)?.label.substring(0, 3)} 
+                                size="small" 
+                                sx={{ mr: 0.5, mb: 0.5 }} 
+                              />
+                            ))}
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <PeopleIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 16 }} />
+                              {shift.employees?.length || 0} assigned
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={shift.isActive ? 'Active' : 'Inactive'}
+                              color={getStatusColor(shift.isActive)}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                              <Tooltip title="Edit">
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleOpenModal('edit', shift)}
+                                  sx={{ color: 'primary.main' }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete">
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => handleDeleteShift(shift.id)}
+                                  sx={{ color: 'error.main' }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Fade>
 
-          <div className="form-group">
-            <label htmlFor="color">Shift Color</label>
-            <input
-              type="color"
-              id="color"
-              name="color"
-              value={formData.color}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="employees">Assign Employees</label>
-            <Select
-              mode="multiple"
-              placeholder="Select employees"
-              value={formData.employees}
-              onChange={handleEmployeeChange}
-              options={employees.map(emp => ({
-                value: emp.id,
-                label: `${emp.firstName} ${emp.lastName}`,
-              }))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Shift description"
-              rows={3}
-            />
-          </div>
-
-          <div className="modal-actions">
-            <Button type="secondary" onClick={handleCloseModal}>
+        {/* Shift Modal */}
+        <Dialog 
+          open={showModal} 
+          onClose={handleCloseModal}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: { borderRadius: 2 }
+          }}
+        >
+          <DialogTitle sx={{ 
+            pb: 1, 
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+            color: 'white'
+          }}>
+            {modalMode === 'create' ? 'Create New Shift' : 'Edit Shift'}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Shift Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccessTimeIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Color"
+                  name="color"
+                  type="color"
+                  value={formData.color}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Box 
+                          sx={{ 
+                            width: 20, 
+                            height: 20, 
+                            borderRadius: '50%', 
+                            backgroundColor: formData.color 
+                          }} 
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Start Time"
+                  name="startTime"
+                  type="time"
+                  value={formData.startTime}
+                  onChange={handleChange}
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ step: 300 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="End Time"
+                  name="endTime"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={handleChange}
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ step: 300 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  multiline
+                  rows={3}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+                  Days of Week
+                </Typography>
+                <FormGroup row>
+                  {dayOptions.map((day) => (
+                    <FormControlLabel
+                      key={day.value}
+                      control={
+                        <Checkbox
+                          checked={formData.daysOfWeek.includes(day.value)}
+                          onChange={() => handleDayToggle(day.value)}
+                          name={`day-${day.value}`}
+                        />
+                      }
+                      label={day.label}
+                    />
+                  ))}
+                </FormGroup>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Assign Employees</InputLabel>
+                  <Select
+                    multiple
+                    value={formData.employees}
+                    onChange={(e) => handleEmployeeChange(e.target.value)}
+                    label="Assign Employees"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip 
+                            key={value} 
+                            label={employees.find(emp => emp.id === value)?.name || value} 
+                            size="small" 
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {employees.map((employee) => (
+                      <MenuItem key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Button onClick={handleCloseModal} color="inherit">
               Cancel
             </Button>
-            <Button type="primary" htmlType="submit">
+            <Button 
+              onClick={handleSubmit} 
+              variant="contained"
+              sx={{
+                background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                color: 'white',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+                }
+              }}
+            >
               {modalMode === 'create' ? 'Create Shift' : 'Update Shift'}
             </Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </MainLayout>
   );
 };
 

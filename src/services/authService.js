@@ -97,8 +97,15 @@ class AuthService {
     }
   }
 
-  logout() {
-    clearAuthData();
+  async logout() {
+    try {
+      await api.post(API_ENDPOINTS.AUTH.LOGOUT);
+      clearAuthData();
+    } catch (error) {
+      // Even if the API call fails, we should still clear local data
+      clearAuthData();
+      throw this.handleError(error);
+    }
   }
 
   isAuthenticated() {

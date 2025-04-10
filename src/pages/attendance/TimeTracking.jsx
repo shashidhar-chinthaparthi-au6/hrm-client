@@ -1,14 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Table, DatePicker, Select, Input } from '../components/common';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  IconButton,
+  Tooltip,
+  Chip,
+  CircularProgress,
+  Fade,
+  Grid,
+  InputAdornment
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import {
+  AccessTime as AccessTimeIcon,
+  Search as SearchIcon,
+  Edit as EditIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  Timer as TimerIcon
+} from '@mui/icons-material';
 import MainLayout from '../components/layout/MainLayout';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
-import CheckInOut from '../components/attendance/CheckInOut';
 
 const TimeTracking = () => {
   const [timeLogs, setTimeLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [userStatus, setUserStatus] = useState('not-checked-in'); // 'not-checked-in', 'checked-in', 'checked-out'
+  const [userStatus, setUserStatus] = useState('not-checked-in');
   const [clockTime, setClockTime] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [filterEmployee, setFilterEmployee] = useState('all');
@@ -60,10 +94,9 @@ const TimeTracking = () => {
 
   const handleCheckIn = () => {
     setUserStatus('checked-in');
-    // In a real implementation, send this to the server
     const newLog = {
       id: timeLogs.length + 1,
-      employeeId: 'EMP1001', // Current user
+      employeeId: 'EMP1001',
       name: 'Current User',
       date: new Date(),
       checkIn: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -78,7 +111,6 @@ const TimeTracking = () => {
 
   const handleCheckOut = () => {
     setUserStatus('checked-out');
-    // Update the latest time log
     const updatedLogs = [...timeLogs];
     if (updatedLogs.length > 0 && updatedLogs[0].status === 'Active') {
       const checkInTime = new Date();
@@ -114,60 +146,6 @@ const TimeTracking = () => {
     setSearchQuery(e.target.value);
   };
 
-  const columns = [
-    {
-      title: 'Employee',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date) => date.toLocaleDateString(),
-    },
-    {
-      title: 'Check In',
-      dataIndex: 'checkIn',
-      key: 'checkIn',
-    },
-    {
-      title: 'Check Out',
-      dataIndex: 'checkOut',
-      key: 'checkOut',
-      render: (checkOut) => checkOut || '—',
-    },
-    {
-      title: 'Duration',
-      dataIndex: 'duration',
-      key: 'duration',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <span className={`status-badge status-${status.toLowerCase()}`}>
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Notes',
-      dataIndex: 'notes',
-      key: 'notes',
-      render: (notes, record) => (
-        <Input
-          type="text"
-          placeholder="Add a note..."
-          value={notes}
-          onChange={(e) => handleNoteChange(record.id, e.target.value)}
-          className="note-input"
-        />
-      ),
-    },
-  ];
-
   // Filter the time logs based on search and employee filter
   const filteredLogs = timeLogs.filter(log => {
     const matchesSearch = searchQuery === '' || 
@@ -179,9 +157,20 @@ const TimeTracking = () => {
     return matchesSearch && matchesEmployee;
   });
 
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'success';
+      case 'completed':
+        return 'primary';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <MainLayout>
-      <div className="time-tracking-page">
+      <Box sx={{ p: 3 }}>
         <Breadcrumbs
           items={[
             { label: 'Dashboard', link: '/dashboard' },
@@ -190,67 +179,208 @@ const TimeTracking = () => {
           ]}
         />
 
-        <h1 className="page-title">Time Tracking</h1>
+        <Typography variant="h4" sx={{ mb: 4, fontWeight: 600 }}>
+          Time Tracking
+        </Typography>
 
-        <div className="time-tracking-overview">
-          <Card className="clock-card">
-            <div className="current-time">
-              <h2>{clockTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</h2>
-              <p>{clockTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            </div>
-            
-            <CheckInOut 
-              status={userStatus}
-              onCheckIn={handleCheckIn}
-              onCheckOut={handleCheckOut}
-            />
-          </Card>
-        </div>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Fade in timeout={500}>
+              <Card 
+                elevation={3}
+                sx={{
+                  borderRadius: 2,
+                  background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                  color: 'white',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #1976d2, #2196f3)',
+                  }
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <AccessTimeIcon sx={{ fontSize: 40, mr: 2 }} />
+                    <Box>
+                      <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                        {clockTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Typography>
+                      <Typography variant="subtitle1">
+                        {clockTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                    {userStatus === 'not-checked-in' && (
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleCheckIn}
+                        startIcon={<CheckCircleIcon />}
+                        sx={{
+                          bgcolor: 'white',
+                          color: 'primary.main',
+                          '&:hover': {
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                          }
+                        }}
+                      >
+                        Check In
+                      </Button>
+                    )}
+                    {userStatus === 'checked-in' && (
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleCheckOut}
+                        startIcon={<CancelIcon />}
+                        sx={{
+                          bgcolor: 'white',
+                          color: 'error.main',
+                          '&:hover': {
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                          }
+                        }}
+                      >
+                        Check Out
+                      </Button>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Fade>
+          </Grid>
 
-        <Card className="time-logs-filter">
-          <div className="filter-row">
-            <div className="filter-item">
-              <label>Date</label>
-              <DatePicker
-                value={selectedDate}
-                onChange={handleDateChange}
-              />
-            </div>
-            <div className="filter-item">
-              <label>Employee</label>
-              <Select
-                value={filterEmployee}
-                onChange={setFilterEmployee}
-                options={[
-                  { value: 'all', label: 'All Employees' },
-                  { value: 'EMP1001', label: 'Employee 1' },
-                  { value: 'EMP1002', label: 'Employee 2' },
-                  { value: 'EMP1003', label: 'Employee 3' },
-                ]}
-              />
-            </div>
-            <div className="filter-item search">
-              <label>Search</label>
-              <Input
-                type="search"
-                placeholder="Search by name or ID..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
-        </Card>
+          <Grid item xs={12} md={8}>
+            <Fade in timeout={500}>
+              <Card elevation={3} sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        label="Select Date"
+                        value={selectedDate}
+                        onChange={handleDateChange}
+                        renderInput={(params) => <TextField {...params} />}
+                      />
+                    </LocalizationProvider>
+                    
+                    <TextField
+                      placeholder="Search employees..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      sx={{ flexGrow: 1 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    
+                    <FormControl sx={{ minWidth: 200 }}>
+                      <InputLabel>Filter Employee</InputLabel>
+                      <Select
+                        value={filterEmployee}
+                        label="Filter Employee"
+                        onChange={(e) => setFilterEmployee(e.target.value)}
+                      >
+                        <MenuItem value="all">All Employees</MenuItem>
+                        {timeLogs.map((log) => (
+                          <MenuItem key={log.employeeId} value={log.employeeId}>
+                            {log.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
 
-        <Card className="time-logs-table">
-          <h2>Time Logs</h2>
-          <Table
-            columns={columns}
-            dataSource={filteredLogs}
-            loading={loading}
-            className="time-tracking-table"
-          />
-        </Card>
-      </div>
+                  <TableContainer component={Paper} elevation={0}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Employee</TableCell>
+                          <TableCell>Date</TableCell>
+                          <TableCell>Check In</TableCell>
+                          <TableCell>Check Out</TableCell>
+                          <TableCell>Duration</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell>Notes</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={7} align="center">
+                              <CircularProgress />
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredLogs.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} align="center">
+                              No time logs found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredLogs.map((log) => (
+                            <TableRow key={log.id}>
+                              <TableCell>{log.name}</TableCell>
+                              <TableCell>
+                                {log.date.toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>{log.checkIn}</TableCell>
+                              <TableCell>{log.checkOut || '—'}</TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <TimerIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                                  {log.duration}
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={log.status}
+                                  color={getStatusColor(log.status)}
+                                  size="small"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  size="small"
+                                  placeholder="Add a note..."
+                                  value={log.notes}
+                                  onChange={(e) => handleNoteChange(log.id, e.target.value)}
+                                  InputProps={{
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        <IconButton size="small">
+                                          <EditIcon fontSize="small" />
+                                        </IconButton>
+                                      </InputAdornment>
+                                    ),
+                                  }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Fade>
+          </Grid>
+        </Grid>
+      </Box>
     </MainLayout>
   );
 };

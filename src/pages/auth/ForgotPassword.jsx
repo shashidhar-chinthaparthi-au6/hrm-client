@@ -1,9 +1,24 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import AuthLayout from '../../components/layout/AuthLayout';
-// import { validateEmail } from '../../utils/validators';
+import {
+  Box,
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Link as MuiLink,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  Fade,
+  Zoom
+} from '@mui/material';
+import {
+  Email as EmailIcon,
+  CheckCircle as CheckCircleIcon,
+  ArrowBack as ArrowBackIcon
+} from '@mui/icons-material';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +29,10 @@ const ForgotPassword = () => {
   const handleChange = (e) => {
     setEmail(e.target.value);
     setError('');
+  };
+
+  const validateEmail = (email) => {
+    return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
   };
 
   const validate = () => {
@@ -62,88 +81,223 @@ const ForgotPassword = () => {
   };
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Reset Your Password</h1>
-          <p className="text-gray-600">Enter your email to receive a password reset link</p>
-        </div>
-        
-        {isSubmitted ? (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center">
-            <svg 
-              className="w-12 h-12 text-green-500 mx-auto mb-4" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <h3 className="text-lg font-semibold mb-2">Check Your Email</h3>
-            <p className="mb-4">
-              We've sent a password reset link to <strong>{email}</strong>
-            </p>
-            <p className="text-sm text-gray-600">
-              If you don't see the email, check your spam folder or
-              <Button 
-                variant="link" 
-                className="font-medium text-blue-600 hover:text-blue-500"
-                onClick={handleSubmit}
-              >
-                click here to resend 
-              </Button>
-            </p>
-            <div className="mt-6">
-              <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
-                Return to login
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
-                {error}
-              </div>
-            )}
-            
-            <Input
-              label="Email Address"
-              name="email"
-              type="email"
-              placeholder="name@company.com"
-              value={email}
-              onChange={handleChange}
-              error={error}
-              autoComplete="email"
-              required
-            />
-            
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+        py: 4,
+        px: 2
+      }}
+    >
+      <Container maxWidth="sm">
+        <Fade in timeout={500}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              borderRadius: 2,
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: 'linear-gradient(90deg, #1976d2, #2196f3)',
+              }
+            }}
+          >
             <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
-              loading={isSubmitting}
-              disabled={isSubmitting}
+              component={Link}
+              to="/login"
+              startIcon={<ArrowBackIcon />}
+              sx={{
+                position: 'absolute',
+                top: 16,
+                left: 16,
+                color: 'text.secondary',
+                '&:hover': {
+                  color: 'primary.main',
+                }
+              }}
             >
-              Send Reset Link
+              Back to Login
             </Button>
-            
-            <div className="text-center">
-              <Link to="/login" className="text-sm text-blue-600 hover:text-blue-800">
-                Back to sign in
-              </Link>
-            </div>
-          </form>
-        )}
-      </div>
-    </AuthLayout>
+
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{
+                mb: 1,
+                fontWeight: 700,
+                color: 'primary.main',
+                textAlign: 'center'
+              }}
+            >
+              Reset Your Password
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                mb: 4,
+                color: 'text.secondary',
+                textAlign: 'center'
+              }}
+            >
+              Enter your email to receive a password reset link
+            </Typography>
+
+            {isSubmitted ? (
+              <Zoom in timeout={500}>
+                <Box sx={{ width: '100%', textAlign: 'center' }}>
+                  <Box
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      backgroundColor: 'success.light',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 2
+                    }}
+                  >
+                    <CheckCircleIcon
+                      sx={{
+                        fontSize: 48,
+                        color: 'success.main'
+                      }}
+                    />
+                  </Box>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Check Your Email
+                  </Typography>
+                  <Typography sx={{ mb: 2 }}>
+                    We've sent a password reset link to <strong>{email}</strong>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    If you don't see the email, check your spam folder or{' '}
+                    <MuiLink
+                      component="button"
+                      variant="body2"
+                      onClick={handleSubmit}
+                      sx={{ 
+                        fontWeight: 600,
+                        color: 'primary.main',
+                        '&:hover': {
+                          color: 'primary.dark',
+                        }
+                      }}
+                    >
+                      click here to resend
+                    </MuiLink>
+                  </Typography>
+                  <Button
+                    component={Link}
+                    to="/login"
+                    variant="outlined"
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ 
+                      mt: 2,
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        backgroundColor: 'primary.light',
+                        color: 'primary.dark',
+                      }
+                    }}
+                  >
+                    Return to login
+                  </Button>
+                </Box>
+              </Zoom>
+            ) : (
+              <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                {error && (
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      mb: 3,
+                      borderRadius: 2,
+                      '& .MuiAlert-icon': {
+                        fontSize: 24
+                      }
+                    }}
+                  >
+                    {error}
+                  </Alert>
+                )}
+
+                <TextField
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={handleChange}
+                  error={Boolean(error)}
+                  fullWidth
+                  required
+                  disabled={isSubmitting}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  disabled={isSubmitting}
+                  sx={{
+                    mt: 3,
+                    mb: 2,
+                    py: 1.5,
+                    borderRadius: 2,
+                    background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+                    },
+                    '&:disabled': {
+                      background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                      opacity: 0.7
+                    }
+                  }}
+                >
+                  {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    'Send Reset Link'
+                  )}
+                </Button>
+              </Box>
+            )}
+          </Paper>
+        </Fade>
+      </Container>
+    </Box>
   );
 };
 

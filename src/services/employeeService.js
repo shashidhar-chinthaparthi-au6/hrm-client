@@ -161,6 +161,16 @@ export const employeeService = {
     }
   },
 
+  getDistinctFilters: async () => {
+    try {
+      const response = await api.get('/employees/distinct-filters');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching distinct filters:', error);
+      throw error;
+    }
+  },
+
   getOrgChart: async () => {
     try {
       const response = await api.get('/employees/organization-chart');
@@ -198,6 +208,82 @@ export const employeeService = {
     } catch (error) {
       console.error(`Error uploading document for employee ${employeeId}:`, error);
       throw error;
+    }
+  },
+
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get('/employees/me');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      throw error;
+    }
+  },
+
+  updateCurrentUser: async (formData) => {
+    try {
+      // If formData is not FormData, convert it
+      if (!(formData instanceof FormData)) {
+        // For nested objects, we need to stringify them
+        const processedData = {};
+        
+        Object.keys(formData).forEach(key => {
+          if (formData[key] !== null && formData[key] !== undefined) {
+            if (typeof formData[key] === 'object' && !Array.isArray(formData[key])) {
+              // Handle nested objects like department and designation
+              processedData[key] = JSON.stringify(formData[key]);
+            } else if (Array.isArray(formData[key])) {
+              // Handle arrays like skills
+              processedData[key] = JSON.stringify(formData[key]);
+            } else {
+              processedData[key] = formData[key];
+            }
+          }
+        });
+        
+        // Send as JSON instead of FormData for complex objects
+        const response = await api.put('/employees/me', processedData);
+        
+        // If response is null or undefined, return the processed data as success
+        if (!response || !response.data) {
+          console.warn('Server returned null response, using processed data');
+          return { data: processedData };
+        }
+        
+        return response;
+      } else {
+        // If it's already FormData, send it as is
+        const response = await api.put('/employees/me', formData);
+        
+        // If response is null or undefined, return success
+        if (!response || !response.data) {
+          console.warn('Server returned null response for FormData');
+          return { data: { success: true } };
+        }
+        
+        return response;
+      }
+    } catch (error) {
+      console.error('Error updating current user:', error);
+      // Include more details in the error
+      if (error.response) {
+        throw {
+          message: error.response.data?.message || 'Server error occurred',
+          status: error.response.status,
+          data: error.response.data
+        };
+      } else if (error.request) {
+        throw {
+          message: 'No response received from server',
+          request: error.request
+        };
+      } else {
+        throw {
+          message: error.message || 'Failed to update profile',
+          error
+        };
+      }
     }
   },
 };

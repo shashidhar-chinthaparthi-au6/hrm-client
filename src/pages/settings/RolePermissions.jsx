@@ -1,25 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { 
-  Card, 
-  Table, 
-  Input, 
-  Button, 
-  Select, 
-  Modal, 
-  Badge 
-} from '../components/common';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  Checkbox,
+  FormControlLabel,
+  CircularProgress,
+  Fade,
+  InputAdornment,
+  Tooltip,
+  Stack,
+  Divider,
+  Alert,
+  Zoom,
+  Grid,
+  Avatar
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  CheckCircle as CheckCircleIcon,
+  AdminPanelSettings as AdminIcon,
+  Security as SecurityIcon,
+  People as PeopleIcon,
+  Info as InfoIcon,
+  Save as SaveIcon,
+  Lock as LockIcon,
+  Visibility as VisibilityIcon,
+  Warning as WarningIcon
+} from '@mui/icons-material';
+import MainLayout from '../components/layout/MainLayout';
+import Breadcrumbs from '../components/layout/Breadcrumbs';
 import { fetchRoles, updateRole, createRole, deleteRole } from '../redux/actions/roleActions';
 
 const RolePermissions = () => {
   const dispatch = useDispatch();
   const { roles, loading, error } = useSelector(state => state.roles);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); // 'create' or 'edit'
+  const [modalMode, setModalMode] = useState('create');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState(null);
   const [filterBy, setFilterBy] = useState('all');
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState(null);
 
   // Form state for creating/editing roles
   const [formData, setFormData] = useState({
@@ -38,13 +84,13 @@ const RolePermissions = () => {
 
   // Modules that have permissions
   const modules = [
-    { id: 'dashboard', name: 'Dashboard', actions: ['view', 'edit'] },
-    { id: 'employees', name: 'Employees', actions: ['view', 'edit', 'create', 'delete'] },
-    { id: 'attendance', name: 'Attendance', actions: ['view', 'edit', 'approve'] },
-    { id: 'leave', name: 'Leave Management', actions: ['view', 'edit', 'approve'] },
-    { id: 'payroll', name: 'Payroll', actions: ['view', 'edit', 'process'] },
-    { id: 'performance', name: 'Performance', actions: ['view', 'edit', 'review'] },
-    { id: 'settings', name: 'Settings', actions: ['view', 'edit'] },
+    { id: 'dashboard', name: 'Dashboard', icon: <AdminIcon />, actions: ['view', 'edit'] },
+    { id: 'employees', name: 'Employees', icon: <PeopleIcon />, actions: ['view', 'edit', 'create', 'delete'] },
+    { id: 'attendance', name: 'Attendance', icon: <SecurityIcon />, actions: ['view', 'edit', 'approve'] },
+    { id: 'leave', name: 'Leave Management', icon: <SecurityIcon />, actions: ['view', 'edit', 'approve'] },
+    { id: 'payroll', name: 'Payroll', icon: <SecurityIcon />, actions: ['view', 'edit', 'process'] },
+    { id: 'performance', name: 'Performance', icon: <SecurityIcon />, actions: ['view', 'edit', 'review'] },
+    { id: 'settings', name: 'Settings', icon: <SecurityIcon />, actions: ['view', 'edit'] },
   ];
 
   useEffect(() => {
@@ -55,8 +101,8 @@ const RolePermissions = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterChange = (value) => {
-    setFilterBy(value);
+  const handleFilterChange = (e) => {
+    setFilterBy(e.target.value);
   };
 
   const filteredRoles = roles?.filter(role => {
@@ -100,14 +146,25 @@ const RolePermissions = () => {
     setShowModal(true);
   };
 
-  const handleDeleteRole = (roleId) => {
-    if (window.confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
-      dispatch(deleteRole(roleId))
+  const handleDeleteClick = (role) => {
+    setRoleToDelete(role);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (roleToDelete) {
+      setSaving(true);
+      dispatch(deleteRole(roleToDelete.id))
         .then(() => {
           toast.success('Role deleted successfully');
+          setDeleteConfirmOpen(false);
+          setRoleToDelete(null);
         })
         .catch(err => {
           toast.error('Failed to delete role');
+        })
+        .finally(() => {
+          setSaving(false);
         });
     }
   };
@@ -133,27 +190,23 @@ const RolePermissions = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     
-    if (modalMode === 'create') {
-      dispatch(createRole(formData))
-        .then(() => {
-          toast.success('Role created successfully');
-          setShowModal(false);
-        })
-        .catch(err => {
-          toast.error('Failed to create role');
-        });
-    } else {
-      dispatch(updateRole(selectedRole.id, formData))
-        .then(() => {
-          toast.success('Role updated successfully');
-          setShowModal(false);
-        })
-        .catch(err => {
-          toast.error('Failed to update role');
-        });
+    try {
+      if (modalMode === 'create') {
+        await dispatch(createRole(formData));
+        toast.success('Role created successfully');
+      } else {
+        await dispatch(updateRole(selectedRole.id, formData));
+        toast.success('Role updated successfully');
+      }
+      setShowModal(false);
+    } catch (err) {
+      toast.error(`Failed to ${modalMode} role`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -191,328 +244,398 @@ const RolePermissions = () => {
     return role.isDefault || role.isAdmin;
   };
 
-  const getRoleBadge = (role) => {
-    if (role.isAdmin) return <Badge type="primary" text="Admin" />;
-    if (role.isDefault) return <Badge type="info" text="Default" />;
-    return <Badge type="success" text="Custom" />;
+  const getRoleChip = (role) => {
+    if (role.isAdmin) {
+      return <Chip icon={<AdminIcon />} label="Admin" color="primary" size="small" />;
+    }
+    if (role.isDefault) {
+      return <Chip icon={<CheckCircleIcon />} label="Default" color="info" size="small" />;
+    }
+    return <Chip icon={<SecurityIcon />} label="Custom" color="success" size="small" />;
   };
 
   return (
-    <div className="role-permissions-container">
-      <div className="page-header">
-        <h1>Role & Permissions</h1>
-        <p>Manage access control and user permissions</p>
-      </div>
+    <MainLayout>
+      <Box sx={{ p: 3 }}>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', link: '/dashboard' },
+            { label: 'Settings', link: '/settings' },
+            { label: 'Role & Permissions', link: '/settings/roles' },
+          ]}
+        />
 
-      <Card>
-        <div className="filters-container">
-          <div className="search-box">
-            <Input
-              type="text"
-              placeholder="Search roles..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              icon="search"
-            />
-          </div>
-          <div className="filter-dropdown">
-            <Select
-              value={filterBy}
-              onChange={handleFilterChange}
-              options={[
-                { value: 'all', label: 'All Roles' },
-                { value: 'admin', label: 'Admin Roles' },
-                { value: 'default', label: 'Default Roles' },
-                { value: 'custom', label: 'Custom Roles' },
-              ]}
-            />
-          </div>
-          <Button 
-            type="primary"
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              Role & Permissions
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Manage access control and user permissions
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={handleCreateRole}
-            icon="plus"
+            sx={{
+              background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+              }
+            }}
           >
             Create New Role
           </Button>
-        </div>
+        </Box>
 
-        {loading ? (
-          <div className="loading-container">Loading roles...</div>
-        ) : error ? (
-          <div className="error-container">Error loading roles. Please try again.</div>
-        ) : (
-          <Table
-            data={filteredRoles || []}
-            columns={[
-              { 
-                header: 'Role Name', 
-                accessor: 'name',
-                cell: (row) => (
-                  <div className="role-name">
-                    <span>{row.name}</span>
-                    {getRoleBadge(row)}
-                  </div>
-                )
-              },
-              { 
-                header: 'Description', 
-                accessor: 'description' 
-              },
-              { 
-                header: 'Users Assigned', 
-                accessor: 'usersCount',
-                cell: (row) => <span>{row.usersCount || 0} users</span>
-              },
-              { 
-                header: 'Last Modified', 
-                accessor: 'updatedAt',
-                cell: (row) => <span>{new Date(row.updatedAt).toLocaleDateString()}</span>
-              },
-              {
-                header: 'Actions',
-                cell: (row) => (
-                  <div className="table-actions">
-                    <Button 
-                      type="text" 
-                      onClick={() => handleEditRole(row)}
-                      icon="edit"
-                      disabled={isRoleProtected(row)}
-                    >
-                      Edit
-                    </Button>
-                    <Button 
-                      type="text" 
-                      onClick={() => handleDeleteRole(row.id)}
-                      icon="trash"
-                      className="delete-btn"
-                      disabled={isRoleProtected(row)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                )
-              }
-            ]}
-            pagination
-            itemsPerPage={10}
-          />
-        )}
-      </Card>
+        <Fade in timeout={500}>
+          <Card elevation={3} sx={{ borderRadius: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <TextField
+                  placeholder="Search roles..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  size="small"
+                  sx={{ width: 300 }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Select
+                  value={filterBy}
+                  onChange={handleFilterChange}
+                  size="small"
+                  sx={{ width: 180 }}
+                >
+                  <MenuItem value="all">All Roles</MenuItem>
+                  <MenuItem value="admin">Admin Roles</MenuItem>
+                  <MenuItem value="default">Default Roles</MenuItem>
+                  <MenuItem value="custom">Custom Roles</MenuItem>
+                </Select>
+              </Box>
 
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title={modalMode === 'create' ? 'Create New Role' : 'Edit Role'}
-        size="large"
-      >
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Role Name</label>
-            <Input
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Enter role name"
-              required
-            />
-          </div>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : error ? (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  Error loading roles. Please try again.
+                </Alert>
+              ) : filteredRoles?.length === 0 ? (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <InfoIcon sx={{ mr: 1 }} />
+                  No roles found matching your search criteria.
+                </Alert>
+              ) : (
+                <TableContainer component={Paper} elevation={0}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Role Name</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Users Assigned</TableCell>
+                        <TableCell>Last Modified</TableCell>
+                        <TableCell align="right">Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {filteredRoles?.map((role) => (
+                        <TableRow key={role.id} hover>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Avatar 
+                                sx={{ 
+                                  bgcolor: role.isAdmin ? 'primary.main' : 
+                                          role.isDefault ? 'info.main' : 'success.main',
+                                  width: 32,
+                                  height: 32
+                                }}
+                              >
+                                {role.isAdmin ? <AdminIcon /> : 
+                                 role.isDefault ? <CheckCircleIcon /> : <SecurityIcon />}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                  {role.name}
+                                </Typography>
+                                {getRoleChip(role)}
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {role.description}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <PeopleIcon fontSize="small" color="action" />
+                              <Typography variant="body2">
+                                {role.usersCount || 0} users
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {new Date(role.updatedAt).toLocaleDateString()}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <Tooltip title="Edit Role">
+                                <IconButton
+                                  onClick={() => handleEditRole(role)}
+                                  disabled={isRoleProtected(role)}
+                                  color="primary"
+                                  size="small"
+                                >
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete Role">
+                                <IconButton
+                                  onClick={() => handleDeleteClick(role)}
+                                  disabled={isRoleProtected(role)}
+                                  color="error"
+                                  size="small"
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </CardContent>
+          </Card>
+        </Fade>
 
-          <div className="form-group">
-            <label>Description</label>
-            <Input
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Describe the purpose of this role"
-            />
-          </div>
+        {/* Create/Edit Role Modal */}
+        <Dialog
+          open={showModal}
+          onClose={() => setShowModal(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+            color: 'white',
+            py: 2
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {modalMode === 'create' ? <AddIcon /> : <EditIcon />}
+              <Typography variant="h6">
+                {modalMode === 'create' ? 'Create New Role' : 'Edit Role'}
+              </Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Box component="form" onSubmit={handleSubmit}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Role Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SecurityIcon color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    multiline
+                    rows={2}
+                    placeholder="Describe the purpose and responsibilities of this role"
+                  />
+                </Grid>
+              </Grid>
 
-          <div className="permissions-container">
-            <h3>Permissions</h3>
-            <p>Select what users with this role can access and modify</p>
+              <Box sx={{ mt: 3, mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Permissions
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <InfoIcon sx={{ mr: 1 }} />
+                  Select what users with this role can access and modify
+                </Alert>
 
-            <div className="permissions-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Module</th>
-                    <th>Permissions</th>
-                    <th>Select All</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {modules.map(module => (
-                    <tr key={module.id}>
-                      <td className="module-name">{module.name}</td>
-                      <td className="permission-options">
-                        {module.actions.map(action => (
-                          <div key={`${module.id}-${action}`} className="permission-checkbox">
-                            <input
-                              type="checkbox"
-                              id={`${module.id}-${action}`}
-                              checked={formData.permissions[module.id]?.[action] || false}
-                              onChange={() => handlePermissionChange(module.id, action)}
+                <TableContainer component={Paper} elevation={0} sx={{ mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: 'background.default' }}>
+                        <TableCell>Module</TableCell>
+                        <TableCell>Permissions</TableCell>
+                        <TableCell align="center">Select All</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {modules.map(module => (
+                        <TableRow key={module.id} hover>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {module.icon}
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {module.name}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Stack direction="row" spacing={2} flexWrap="wrap">
+                              {module.actions.map(action => (
+                                <FormControlLabel
+                                  key={`${module.id}-${action}`}
+                                  control={
+                                    <Checkbox
+                                      checked={formData.permissions[module.id]?.[action] || false}
+                                      onChange={() => handlePermissionChange(module.id, action)}
+                                      size="small"
+                                    />
+                                  }
+                                  label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      {action === 'view' && <VisibilityIcon fontSize="small" color="action" />}
+                                      {action === 'edit' && <EditIcon fontSize="small" color="action" />}
+                                      {action === 'create' && <AddIcon fontSize="small" color="action" />}
+                                      {action === 'delete' && <DeleteIcon fontSize="small" color="action" />}
+                                      {action === 'approve' && <CheckCircleIcon fontSize="small" color="action" />}
+                                      {action === 'process' && <LockIcon fontSize="small" color="action" />}
+                                      {action === 'review' && <SecurityIcon fontSize="small" color="action" />}
+                                      <Typography variant="body2">
+                                        {action.charAt(0).toUpperCase() + action.slice(1)}
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  sx={{ minWidth: 120 }}
+                                />
+                              ))}
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Checkbox
+                              checked={module.actions.every(action => 
+                                formData.permissions[module.id]?.[action] || false
+                              )}
+                              onChange={() => handleSelectAll(module.id)}
+                              size="small"
                             />
-                            <label htmlFor={`${module.id}-${action}`}>
-                              {action.charAt(0).toUpperCase() + action.slice(1)}
-                            </label>
-                          </div>
-                        ))}
-                      </td>
-                      <td className="select-all">
-                        <input
-                          type="checkbox"
-                          id={`select-all-${module.id}`}
-                          checked={
-                            module.actions.every(action => 
-                              formData.permissions[module.id]?.[action] || false
-                            )
-                          }
-                          onChange={() => handleSelectAll(module.id)}
-                        />
-                        <label htmlFor={`select-all-${module.id}`}>Select All</label>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <Button type="text" onClick={() => setShowModal(false)}>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Button onClick={() => setShowModal(false)}>
               Cancel
             </Button>
-            <Button type="primary" htmlType="submit">
-              {modalMode === 'create' ? 'Create Role' : 'Update Role'}
+            <Button
+              variant="contained"
+              onClick={handleSubmit}
+              disabled={saving}
+              startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+              sx={{
+                background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                color: 'white',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #1565c0 30%, #1e88e5 90%)',
+                }
+              }}
+            >
+              {saving ? 'Saving...' : modalMode === 'create' ? 'Create Role' : 'Update Role'}
             </Button>
-          </div>
-        </form>
-      </Modal>
+          </DialogActions>
+        </Dialog>
 
-      <style jsx>{`
-        .role-permissions-container {
-          padding: 20px;
-        }
-        
-        .page-header {
-          margin-bottom: 24px;
-        }
-        
-        .page-header h1 {
-          font-size: 24px;
-          margin-bottom: 8px;
-        }
-        
-        .page-header p {
-          color: #6b7280;
-        }
-        
-        .filters-container {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-        
-        .search-box {
-          width: 300px;
-        }
-        
-        .filter-dropdown {
-          width: 180px;
-        }
-        
-        .role-name {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        
-        .table-actions {
-          display: flex;
-          gap: 8px;
-        }
-        
-        .delete-btn {
-          color: #ef4444;
-        }
-        
-        .form-group {
-          margin-bottom: 20px;
-        }
-        
-        .form-group label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 500;
-        }
-        
-        .permissions-container {
-          margin-top: 24px;
-        }
-        
-        .permissions-container h3 {
-          margin-bottom: 8px;
-        }
-        
-        .permissions-container p {
-          margin-bottom: 16px;
-          color: #6b7280;
-        }
-        
-        .permissions-table {
-          overflow-x: auto;
-          margin-top: 16px;
-        }
-        
-        .permissions-table table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        
-        .permissions-table th,
-        .permissions-table td {
-          padding: 12px 16px;
-          text-align: left;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .permissions-table th {
-          background-color: #f9fafb;
-          font-weight: 500;
-        }
-        
-        .module-name {
-          font-weight: 500;
-        }
-        
-        .permission-options {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        
-        .permission-checkbox {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        
-        .select-all {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        
-        .modal-footer {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          margin-top: 24px;
-        }
-      `}</style>
-    </div>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            bgcolor: 'error.light',
+            color: 'error.contrastText',
+            py: 2
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WarningIcon />
+              <Typography variant="h6">
+                Confirm Delete
+              </Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <WarningIcon sx={{ mr: 1 }} />
+              This action cannot be undone. All users assigned to this role will lose their permissions.
+            </Alert>
+            <Typography variant="body1" gutterBottom>
+              Are you sure you want to delete the role <strong>{roleToDelete?.name}</strong>?
+            </Typography>
+            {roleToDelete?.usersCount > 0 && (
+              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                Warning: This role is currently assigned to {roleToDelete.usersCount} users.
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Button onClick={() => setDeleteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleDeleteConfirm}
+              disabled={saving}
+              startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+            >
+              {saving ? 'Deleting...' : 'Delete Role'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </MainLayout>
   );
 };
 

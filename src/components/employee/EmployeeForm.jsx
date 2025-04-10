@@ -43,6 +43,8 @@ const EmployeeForm = ({
     employeeId: '',
     employmentType: 'full-time',
     salary: '',
+    position: '',
+    workLocation: '',
     bankDetails: {
       accountName: '',
       accountNumber: '',
@@ -60,6 +62,18 @@ const EmployeeForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  // Mock data for managers dropdown
+  const mockManagers = [
+    { id: '1', firstName: 'John', lastName: 'Smith', position: 'Senior Manager' },
+    { id: '2', firstName: 'Sarah', lastName: 'Johnson', position: 'Department Head' },
+    { id: '3', firstName: 'Michael', lastName: 'Brown', position: 'Team Lead' },
+    { id: '4', firstName: 'Emily', lastName: 'Davis', position: 'Project Manager' },
+    { id: '5', firstName: 'David', lastName: 'Wilson', position: 'Director' }
+  ];
+
+  // Use mock managers if no managers are provided
+  const availableManagers = managers.length > 0 ? managers : mockManagers;
 
   useEffect(() => {
     if (employee) {
@@ -244,7 +258,14 @@ const EmployeeForm = ({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      // Ensure position and workLocation are included in the submission
+      const submissionData = {
+        ...formData,
+        position: formData.position || formData.jobTitle, // Use jobTitle as position if not set
+        workLocation: formData.workLocation || 'Office', // Default to 'Office' if not set
+      };
+      
+      await onSubmit(submissionData);
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error(error.response?.data?.message || 'Failed to add employee. Please try again.');
@@ -486,9 +507,9 @@ const EmployeeForm = ({
                   onChange={(e) => handleInputChange({
                     target: { name: 'managerId', value: e.target.value }
                   })}
-                  options={managers.map(m => ({ 
+                  options={availableManagers.map(m => ({ 
                     value: m.id, 
-                    label: `${m.firstName} ${m.lastName}` 
+                    label: `${m.firstName} ${m.lastName} (${m.position})` 
                   }))}
                   placeholder="Select reporting manager"
                 />
@@ -506,6 +527,31 @@ const EmployeeForm = ({
                   })}
                   options={roles.map(r => ({ value: r.id, label: r.name }))}
                   placeholder="Select role"
+                />
+              </div>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <Input
+                  label="Position"
+                  name="position"
+                  value={formData.position}
+                  onChange={handleInputChange}
+                  placeholder="Enter position"
+                  required
+                  error={errors.position}
+                />
+              </div>
+              <div className="form-group">
+                <Input
+                  label="Work Location"
+                  name="workLocation"
+                  value={formData.workLocation}
+                  onChange={handleInputChange}
+                  placeholder="Enter work location"
+                  required
+                  error={errors.workLocation}
                 />
               </div>
             </div>

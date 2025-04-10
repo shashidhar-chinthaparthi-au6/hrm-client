@@ -17,13 +17,21 @@ export const AuthProvider = ({ children }) => {
   const initAuth = async () => {
     try {
       const authData = getAuthData();
-      if (authData) {
+      if (authData?.token && authData?.user) {
         setUser(authData.user);
         setIsAuthenticated(true);
+        setAuthData(authData, true);
+      } else {
+        clearAuthData();
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
       setError('Failed to initialize authentication');
+      clearAuthData();
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -33,12 +41,13 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const { user, token } = await authService.login(credentials);
+      const { user, token, refreshToken } = await authService.login(credentials);
       console.log('Auth context: Login successful', { user, token });
-      setAuthData({ token, user });
+      
+      setAuthData({ token, refreshToken, user }, true);
       setUser(user);
       setIsAuthenticated(true);
-      return { user, token };
+      return { user, token, refreshToken };
     } catch (error) {
       console.error('Auth context: Login failed', error);
       setError(error.response?.data?.message || 'Login failed');
@@ -65,9 +74,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     try {
-      clearAuthData();
+      await authService.logout();
       setUser(null);
       setError(null);
       setIsAuthenticated(false);

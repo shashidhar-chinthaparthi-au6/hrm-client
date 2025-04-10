@@ -8,7 +8,7 @@ import { addToast, removeToast } from '../redux/slices/toastSlice';
  * Custom hook for displaying toast notifications
  * @returns {Object} Toast methods
  */
-const useToast = () => {
+export const useToast = () => {
   const dispatch = useDispatch();
   
   /**
@@ -121,5 +121,3 @@ const useToast = () => {
     info
   };
 };
-
-export default useToast;

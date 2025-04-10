@@ -121,12 +121,18 @@ const SimpleSidebar = ({ isOpen, onToggle, userRole = 'user' }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState({});
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleNavClick = (path, hasSubItems, name) => {
+  const handleNavClick = async (path, hasSubItems, name) => {
     if (hasSubItems) {
       setExpandedItems(prev => ({ ...prev, [name]: !prev[name] }));
     } else {
-      navigate(path);
+      setIsNavigating(true);
+      try {
+        await navigate(path);
+      } finally {
+        setIsNavigating(false);
+      }
     }
   };
   
@@ -155,7 +161,9 @@ const SimpleSidebar = ({ isOpen, onToggle, userRole = 'user' }) => {
         top: 0,
         zIndex: 1200,
         overflow: 'hidden',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        opacity: isNavigating ? 0.7 : 1,
+        pointerEvents: isNavigating ? 'none' : 'auto'
       }}
     >
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
@@ -333,9 +341,32 @@ const SimpleFooter = () => (
 
 // Main content area to display the loaded pages
 const MainContent = ({ path }) => {
-  // Use a switch-case to determine which component to render based on the path
-  const getComponentForPath = (currentPath) => {
-    switch (currentPath) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    // Add a small delay to ensure smooth transition
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [path]);
+
+  const getComponentForPath = (path) => {
+    if (isLoading) {
+      return (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '60vh'
+        }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    switch (path) {
       case '/dashboard':
         return <Dashboard />;
       case '/profile':
@@ -402,9 +433,25 @@ const MainContent = ({ path }) => {
   };
 
   return (
-    <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>}>
-      {getComponentForPath(path)}
-    </Suspense>
+    <Box sx={{ 
+      position: 'relative',
+      minHeight: '60vh',
+      transition: 'opacity 0.3s ease-in-out',
+      opacity: isLoading ? 0.7 : 1
+    }}>
+      <Suspense fallback={
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '60vh'
+        }}>
+          <CircularProgress />
+        </Box>
+      }>
+        {getComponentForPath(path)}
+      </Suspense>
+    </Box>
   );
 };
 

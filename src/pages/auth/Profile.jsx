@@ -38,7 +38,7 @@ import {
   VisibilityOff
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import useToast from '../../hooks/useToast';
+import { useToast } from '../../hooks/useToast';
 import { getAuthData, setAuthData } from '../../utils/storage';
 import { employeeService } from '../../services/employeeService';
 import api from '../../services/api';

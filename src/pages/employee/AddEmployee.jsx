@@ -5,7 +5,7 @@ import EmployeeForm from '../../components/employee/EmployeeForm';
 import Card from '../../components/common/Card';
 import Breadcrumbs from '../../components/layout/Breadcrumbs';
 import { useAuth } from '../../contexts/AuthContext';
-import useToast from '../../hooks/useToast';
+import { useToast } from '../../hooks/useToast';
 import { employeeService } from '../../services/employeeService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 // import './EmployeeForm.css';

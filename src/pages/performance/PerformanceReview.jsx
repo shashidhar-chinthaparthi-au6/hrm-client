@@ -5,7 +5,7 @@ import Button from '../../components/common/Button';
 import ReviewForm from '../../components/performance/ReviewForm';
 import FeedbackForm from '../../components/performance/FeedbackForm';
 import PerformanceChart from '../../components/performance/PerformanceChart';
-import { getAllReviews, getEmployeeReview, updateReview } from '../../services/performanceService';
+import { performanceService } from '../../services/performanceService';
 import { toast } from 'react-toastify';
 import Breadcrumbs from '../../components/layout/Breadcrumbs';
 import '../../assets/styles/pages/performance.css';
@@ -23,12 +23,12 @@ const PerformanceReview = () => {
       setIsLoading(true);
       try {
         // Fetch all reviews for comparison metrics
-        const allReviewsData = await getAllReviews();
+        const allReviewsData = await performanceService.getAllReviews();
         setReviews(allReviewsData);
 
         // Fetch specific employee review if employee ID is provided
         if (employeeId) {
-          const reviewData = await getEmployeeReview(employeeId);
+          const reviewData = await performanceService.getEmployeeReview(employeeId);
           setCurrentReview(reviewData);
         }
       } catch (error) {
@@ -44,11 +44,11 @@ const PerformanceReview = () => {
 
   const handleSubmitReview = async (reviewData) => {
     try {
-      await updateReview(employeeId, reviewData);
+      await performanceService.updateReview(employeeId, reviewData);
       toast.success('Performance review updated successfully');
       
       // Refresh the current review data
-      const updatedReview = await getEmployeeReview(employeeId);
+      const updatedReview = await performanceService.getEmployeeReview(employeeId);
       setCurrentReview(updatedReview);
     } catch (error) {
       console.error('Error updating review:', error);
@@ -63,7 +63,7 @@ const PerformanceReview = () => {
         feedback: [...(currentReview.feedback || []), feedbackData]
       };
       
-      await updateReview(employeeId, updatedReview);
+      await performanceService.updateReview(employeeId, updatedReview);
       setCurrentReview(updatedReview);
       toast.success('Feedback added successfully');
     } catch (error) {

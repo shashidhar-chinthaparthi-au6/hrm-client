@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { employeeService } from '../../services/employeeService';
 import { saveAs } from 'file-saver';
 import { debounce } from 'lodash';
+import EmployeeDetailsModal from '../../components/EmployeeDetailsModal';
 
 const EmployeeDirectory = () => {
   const navigate = useNavigate();
@@ -36,6 +37,8 @@ const EmployeeDirectory = () => {
   const [designations, setDesignations] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
   const [activeFilters, setActiveFilters] = useState(0);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Fetch departments and designations
   useEffect(() => {
@@ -196,6 +199,18 @@ const EmployeeDirectory = () => {
       default:
         return field;
     }
+  };
+
+  // Handle card click
+  const handleCardClick = (employee) => {
+    setSelectedEmployee(employee);
+    setModalOpen(true);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedEmployee(null);
   };
 
   return (
@@ -497,7 +512,7 @@ const EmployeeDirectory = () => {
                         boxShadow: '0 12px 28px 0 rgba(0, 0, 0, 0.1)',
                       }
                     }} 
-                    onClick={() => navigate(`/employees/${employee._id}`)}
+                    onClick={() => handleCardClick(employee)}
                   >
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -569,6 +584,13 @@ const EmployeeDirectory = () => {
           </>
         )}
       </Container>
+
+      {/* Employee Details Modal */}
+      <EmployeeDetailsModal 
+        open={modalOpen}
+        onClose={handleModalClose}
+        employee={selectedEmployee}
+      />
     </Box>
   );
 };

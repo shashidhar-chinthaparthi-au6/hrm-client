@@ -4,17 +4,45 @@ import { setAuthData, getAuthData, clearAuthData } from '../utils/storage';
 import { STORAGE_KEYS, API_ENDPOINTS } from '../utils/constants';
 
 class AuthService {
+  constructor() {
+    // Set initial auth token from storage
+    const authData = getAuthData();
+    if (authData?.token) {
+      this.setAuthToken(authData.token);
+    }
+  }
+
+  setAuthToken(token) {
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common['Authorization'];
+    }
+  }
+
   async login(credentials) {
     try {
       const response = await api.post('/auth/login', credentials);
-      const { user, token, refreshToken, rememberMe } = response.data.data;
+      const { user, token, refreshToken } = response.data.data;
       
-      // Store auth data
-      setAuthData({ token, refreshToken, user }, rememberMe);
+      // Set auth data in storage with rememberMe set to true
+      setAuthData({ user, token, refreshToken }, true);
+      
+      // Set token in axios headers
+      this.setAuthToken(token);
       
       return { user, token, refreshToken };
     } catch (error) {
-      throw this.handleError(error);
+      throw error.response?.data || error;
+    }
+  }
+
+  async verifyToken() {
+    try {
+      const response = await api.get('/auth/verify');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
     }
   }
 
@@ -25,6 +53,7 @@ class AuthService {
       
       // Store auth data
       setAuthData({ token, refreshToken, user }, true);
+      this.setAuthToken(token);
       
       return { user, token, refreshToken };
     } catch (error) {
@@ -32,57 +61,60 @@ class AuthService {
     }
   }
 
-  async refreshToken() {
+  async logout() {
     try {
-      const authData = getAuthData();
-      if (!authData?.refreshToken) {
-        throw new Error('No refresh token available');
+      const token = this.getToken();
+      if (token) {
+        await api.post('/auth/logout');
       }
-
-      const response = await api.post('/auth/refresh-token', {
-        refreshToken: authData.refreshToken
-      });
-
-      const { token, refreshToken } = response.data.data;
-      
-      // Update stored tokens
-      const updatedAuthData = {
-        ...authData,
-        token,
-        refreshToken
-      };
-      
-      setAuthData(updatedAuthData, true);
-      
-      return { token, refreshToken };
     } catch (error) {
-      // If refresh fails, clear auth data and redirect to login
+      console.error('Logout error:', error);
+    } finally {
       clearAuthData();
-      throw this.handleError(error);
+      this.setAuthToken(null);
     }
   }
 
-  async getProfile() {
+  async refreshToken() {
     try {
-      const response = await api.get('/auth/profile');
-      return response.data.data;
+      const { refreshToken } = getAuthData() || {};
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await api.post('/auth/refresh-token', { refreshToken });
+      const { token, refreshToken: newRefreshToken } = response.data.data;
+      
+      // Get current auth data
+      const currentAuthData = getAuthData();
+      
+      // Update auth data in storage
+      setAuthData({ 
+        ...currentAuthData,
+        token,
+        refreshToken: newRefreshToken
+      }, true);
+      
+      // Update token in axios headers
+      this.setAuthToken(token);
+      
+      return { token, refreshToken: newRefreshToken };
     } catch (error) {
-      throw this.handleError(error);
+      // Clear auth data on refresh failure
+      clearAuthData();
+      this.setAuthToken(null);
+      throw error;
     }
+  }
+
+  async getCurrentUser() {
+    return getAuthData()?.user;
   }
 
   async updateProfile(profileData) {
     try {
       const response = await api.put('/auth/profile', profileData);
-      const { user } = response.data.data;
-      
-      // Update stored user data
-      const authData = getAuthData();
-      if (authData) {
-        setAuthData({ ...authData, user }, true);
-      }
-      
-      return user;
+      return response.data.data;
     } catch (error) {
       throw this.handleError(error);
     }
@@ -97,20 +129,21 @@ class AuthService {
     }
   }
 
-  async logout() {
-    try {
-      await api.post(API_ENDPOINTS.AUTH.LOGOUT);
-      clearAuthData();
-    } catch (error) {
-      // Even if the API call fails, we should still clear local data
-      clearAuthData();
-      throw this.handleError(error);
+  handleError(error) {
+    if (error.response) {
+      // Server responded with error
+      return error.response.data;
+    } else if (error.request) {
+      // Request made but no response
+      return { message: 'No response from server' };
+    } else {
+      // Other errors
+      return { message: error.message };
     }
   }
 
   isAuthenticated() {
-    const authData = getAuthData();
-    return !!authData?.token;
+    return !!getAuthData()?.token;
   }
 
   getToken() {
@@ -121,39 +154,6 @@ class AuthService {
   getUser() {
     const authData = getAuthData();
     return authData?.user;
-  }
-
-  handleError(error) {
-    if (error.response) {
-      // Server responded with error
-      const message = error.response.data?.message || 'An error occurred';
-      const status = error.response.status;
-      
-      // Handle specific error cases
-      switch (status) {
-        case 401:
-          // Clear auth data on unauthorized
-          clearAuthData();
-          break;
-        case 403:
-          // Handle forbidden
-          break;
-        case 422:
-          // Handle validation errors
-          break;
-        default:
-          // Handle other errors
-          break;
-      }
-      
-      return new Error(message);
-    } else if (error.request) {
-      // Request made but no response
-      return new Error('Network error. Please check your connection.');
-    } else {
-      // Other errors
-      return error;
-    }
   }
 }
 

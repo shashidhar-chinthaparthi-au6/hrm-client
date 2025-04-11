@@ -18,9 +18,27 @@ export const AuthProvider = ({ children }) => {
     try {
       const authData = getAuthData();
       if (authData?.token && authData?.user) {
+        // Set token in axios headers
+        authService.setAuthToken(authData.token);
+        
+        // Update state
         setUser(authData.user);
         setIsAuthenticated(true);
-        setAuthData(authData, true);
+        
+        // Verify token is still valid
+        try {
+          await authService.verifyToken();
+        } catch (error) {
+          // If token verification fails, try to refresh
+          try {
+            await authService.refreshToken();
+          } catch (refreshError) {
+            // If refresh fails, clear everything
+            clearAuthData();
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        }
       } else {
         clearAuthData();
         setUser(null);
@@ -41,18 +59,41 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const { user, token, refreshToken } = await authService.login(credentials);
-      console.log('Auth context: Login successful', { user, token });
       
-      setAuthData({ token, refreshToken, user }, true);
+      const { user, token, refreshToken } = await authService.login(credentials);
+      
+      // Set auth data in storage with rememberMe true
+      setAuthData({ user, token, refreshToken }, true);
+      
+      // Set token in axios headers
+      authService.setAuthToken(token);
+      
+      // Update state
       setUser(user);
       setIsAuthenticated(true);
-      return { user, token, refreshToken };
+      
+      return { user, token };
     } catch (error) {
       console.error('Auth context: Login failed', error);
-      setError(error.response?.data?.message || 'Login failed');
+      setError(error.message || 'Login failed');
       throw error;
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      clearAuthData();
+      authService.setAuthToken(null);
+      setUser(null);
+      setError(null);
+      setIsAuthenticated(false);
       setLoading(false);
     }
   };
@@ -62,7 +103,8 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const { user, token } = await authService.register(userData);
-      setAuthData({ token, user });
+      setAuthData({ token, user }, true);
+      authService.setAuthToken(token);
       setUser(user);
       setIsAuthenticated(true);
       return user;
@@ -74,18 +116,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-      setError(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout error:', error);
-      setError('Failed to logout');
-    }
-  };
-
   const updateProfile = async (profileData) => {
     try {
       setLoading(true);
@@ -93,7 +123,7 @@ export const AuthProvider = ({ children }) => {
       const { user } = await authService.updateProfile(profileData);
       const authData = getAuthData();
       if (authData) {
-        setAuthData({ ...authData, user });
+        setAuthData({ ...authData, user }, true);
       }
       setUser(user);
       return user;
@@ -110,7 +140,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasPermission = (permission) => {
-    return true;
+    if (!user || !user.permissions) return false;
+    return user.permissions.includes(permission);
   };
 
   const value = {

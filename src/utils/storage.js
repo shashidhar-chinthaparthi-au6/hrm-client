@@ -218,6 +218,7 @@ export const STORAGE_KEYS = {
     removeLocalStorageItem(STORAGE_KEYS.AUTH_TOKEN);
     removeLocalStorageItem(STORAGE_KEYS.REFRESH_TOKEN);
     removeLocalStorageItem(STORAGE_KEYS.USER);
+    removeLocalStorageItem(STORAGE_KEYS.REMEMBER_ME);
     
     // Clear from sessionStorage
     removeSessionStorageItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -247,19 +248,123 @@ export const STORAGE_KEYS = {
    * @param {Object} filters - Filter settings
    */
   export const saveFilters = (screen, filters) => {
-    const allFilters = getLocalStorageItem(STORAGE_KEYS.FILTERS, {});
-    allFilters[screen] = filters;
-    setLocalStorageItem(STORAGE_KEYS.FILTERS, allFilters);
+    setLocalStorageItem(`${STORAGE_KEYS.FILTERS}_${screen}`, filters);
   };
   
   /**
-   * Get stored filter settings
+   * Get filter settings
    * @param {string} screen - Screen identifier
    * @returns {Object} Filter settings
    */
   export const getFilters = (screen) => {
-    const allFilters = getLocalStorageItem(STORAGE_KEYS.FILTERS, {});
-    return allFilters[screen] || {};
+    return getLocalStorageItem(`${STORAGE_KEYS.FILTERS}_${screen}`, {});
+  };
+  
+  /**
+   * Clear filter settings
+   * @param {string} screen - Screen identifier
+   */
+  export const clearFilters = (screen) => {
+    removeLocalStorageItem(`${STORAGE_KEYS.FILTERS}_${screen}`);
+  };
+  
+  /**
+   * Save recent searches
+   * @param {string} screen - Screen identifier
+   * @param {string} search - Search term
+   */
+  export const saveRecentSearch = (screen, search) => {
+    if (!search) return;
+    
+    const searches = getRecentSearches(screen);
+    const updatedSearches = [search, ...searches.filter(s => s !== search)].slice(0, 5);
+    
+    setLocalStorageItem(`${STORAGE_KEYS.RECENT_SEARCHES}_${screen}`, updatedSearches);
+  };
+  
+  /**
+   * Get recent searches
+   * @param {string} screen - Screen identifier
+   * @returns {Array} Recent searches
+   */
+  export const getRecentSearches = (screen) => {
+    return getLocalStorageItem(`${STORAGE_KEYS.RECENT_SEARCHES}_${screen}`, []);
+  };
+  
+  /**
+   * Clear recent searches
+   * @param {string} screen - Screen identifier
+   */
+  export const clearRecentSearches = (screen) => {
+    removeLocalStorageItem(`${STORAGE_KEYS.RECENT_SEARCHES}_${screen}`);
+  };
+  
+  /**
+   * Save notification settings
+   * @param {Object} settings - Notification settings
+   */
+  export const saveNotificationSettings = (settings) => {
+    setLocalStorageItem(STORAGE_KEYS.NOTIFICATIONS, settings);
+  };
+  
+  /**
+   * Get notification settings
+   * @returns {Object} Notification settings
+   */
+  export const getNotificationSettings = () => {
+    return getLocalStorageItem(STORAGE_KEYS.NOTIFICATIONS, {
+      email: true,
+      push: true,
+      desktop: true
+    });
+  };
+  
+  /**
+   * Save sidebar state
+   * @param {boolean} expanded - Whether sidebar is expanded
+   */
+  export const saveSidebarState = (expanded) => {
+    setLocalStorageItem(STORAGE_KEYS.SIDEBAR_STATE, expanded);
+  };
+  
+  /**
+   * Get sidebar state
+   * @returns {boolean} Whether sidebar is expanded
+   */
+  export const getSidebarState = () => {
+    return getLocalStorageItem(STORAGE_KEYS.SIDEBAR_STATE, true);
+  };
+  
+  /**
+   * Save attendance cache
+   * @param {Object} cache - Attendance cache
+   */
+  export const saveAttendanceCache = (cache) => {
+    setLocalStorageItem(STORAGE_KEYS.ATTENDANCE_CACHE, cache, 24 * 60 * 60 * 1000);
+  };
+  
+  /**
+   * Get attendance cache
+   * @returns {Object} Attendance cache
+   */
+  export const getAttendanceCache = () => {
+    return getLocalStorageItem(STORAGE_KEYS.ATTENDANCE_CACHE, null);
+  };
+  
+  /**
+   * Save last activity
+   * @param {Date} date - Last activity date
+   */
+  export const saveLastActivity = (date) => {
+    setLocalStorageItem(STORAGE_KEYS.LAST_ACTIVITY, date);
+  };
+  
+  /**
+   * Get last activity
+   * @returns {Date} Last activity date
+   */
+  export const getLastActivity = () => {
+    return getLocalStorageItem(STORAGE_KEYS.LAST_ACTIVITY, new Date());
   };
   
   export default {
@@ -278,5 +383,17 @@ export const STORAGE_KEYS = {
     getThemePreference,
     setThemePreference,
     saveFilters,
-    getFilters
+    getFilters,
+    clearFilters,
+    saveRecentSearch,
+    getRecentSearches,
+    clearRecentSearches,
+    saveNotificationSettings,
+    getNotificationSettings,
+    saveSidebarState,
+    getSidebarState,
+    saveAttendanceCache,
+    getAttendanceCache,
+    saveLastActivity,
+    getLastActivity
   };

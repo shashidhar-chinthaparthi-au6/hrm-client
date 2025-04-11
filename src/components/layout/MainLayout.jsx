@@ -12,6 +12,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { useAuth } from '../../hooks/useAuth';
 // import './MainLayout.css';
 
 // Lazy load page components for better performance
@@ -465,13 +466,13 @@ const MainLayout = ({
   sidebarDefaultOpen = true,
   showBreadcrumbs = true,
   footerProps = {},
-  onLogout = () => console.log('Logout clicked'),
 }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(sidebarDefaultOpen);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
+  const { logout } = useAuth();
 
   // Generate breadcrumbs based on current location
   const generateBreadcrumbs = () => {
@@ -541,6 +542,15 @@ const MainLayout = ({
 
   const breadcrumbs = generateBreadcrumbs();
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
       <SimpleSidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} userRole={user.role} />
@@ -556,7 +566,7 @@ const MainLayout = ({
         <SimpleHeader 
           onToggleSidebar={toggleSidebar} 
           userName={user.name} 
-          onLogout={onLogout}
+          onLogout={handleLogout}
         />
         
         <Box component="main" sx={{ 
@@ -637,7 +647,6 @@ MainLayout.propTypes = {
   sidebarDefaultOpen: PropTypes.bool,
   showBreadcrumbs: PropTypes.bool,
   footerProps: PropTypes.object,
-  onLogout: PropTypes.func,
 };
 
 export default MainLayout;
